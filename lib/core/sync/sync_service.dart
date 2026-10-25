@@ -25,11 +25,15 @@ class SyncService {
     required this.db,
     required this.dio,
     required this.prefs,
+    required this.meId,
   });
 
   final AppDatabase db;
   final Dio dio;
   final SharedPreferences prefs;
+
+  /// 当前登录用户 id。不要再写死 u_me —— 换个账号就错了。
+  final String meId;
 
   late final TodoApi _todoApi = TodoApi(dio);
   late final PeriodApi _periodApi = PeriodApi(dio);
@@ -137,7 +141,7 @@ class SyncService {
     final now = DateTime.now().millisecondsSinceEpoch;
     final dto = await _guardConflict(() => _todoApi.patch(item.id, {
           'doneAt': done ? now : null,
-          'doneBy': done ? Members.me : null,
+          'doneBy': done ? meId : null,
           'rev': item.rev,
         }));
     await upsertTodo(dto);
@@ -254,9 +258,13 @@ class SyncService {
   Future<void> addSaving(
     Wish wish, {
     required int amount,
-    String memberId = Members.me,
+    String? memberId,
   }) async {
-    final dto = await _savingApi.add(wish.id, amount: amount, memberId: memberId);
+    final dto = await _savingApi.add(
+      wish.id,
+      amount: amount,
+      memberId: memberId ?? meId,
+    );
     await upsertSaving(dto);
   }
 

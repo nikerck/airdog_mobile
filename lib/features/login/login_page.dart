@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/auth/auth_controller.dart';
-import '../../core/network/api_client.dart';
 import '../../app/theme/app_theme.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
@@ -16,12 +15,8 @@ class LoginPage extends ConsumerStatefulWidget {
 }
 
 class _LoginPageState extends ConsumerState<LoginPage> {
-  // 桌面版直连本机；Android 模拟器用 10.0.2.2 指向宿主机。
-  final _server = TextEditingController(
-    text: Platform.isWindows || Platform.isLinux || Platform.isMacOS
-        ? '127.0.0.1:8080'
-        : '10.0.2.2:8080',
-  );
+    // 不预填任何地址：谁家的服务器只有用户自己知道，下面有快捷填充。
+  final _server = TextEditingController();
   final _username = TextEditingController();
   final _password = TextEditingController();
 
@@ -208,30 +203,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     )
                   : const Text('登录'),
             ),
-
-            if (ApiClient.useMock) ...[
-              const SizedBox(height: 24),
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: AppTheme.softSurface(context),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.science_outlined, size: 18, color: muted),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Mock 模式：不会真的联网。任意账号 + 密码 123456 即可登录。',
-                        style: TextStyle(fontSize: 12, height: 1.6, color: muted),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
           ],
         ),
       ),

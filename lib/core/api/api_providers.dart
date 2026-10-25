@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../auth/auth_controller.dart';
+import '../db/app_database.dart';
 import '../db/db_provider.dart';
 import '../network/api_client.dart';
 import '../settings/appearance.dart';
@@ -22,10 +23,12 @@ final apiDioProvider = Provider<Dio?>((ref) {
 final syncServiceProvider = Provider<SyncService?>((ref) {
   final dio = ref.watch(apiDioProvider);
   if (dio == null) return null;
+  final session = ref.watch(authProvider);
   return SyncService(
     db: ref.watch(databaseProvider),
     dio: dio,
     prefs: ref.watch(sharedPreferencesProvider),
+    meId: session?.userId ?? Members.me,
   );
 });
 
@@ -90,6 +93,16 @@ final meMemberProvider = Provider<SpaceMember?>((ref) {
     if (m.isMe) return m;
   }
   return null;
+});
+
+/// 当前登录用户 id（登录返回的 userId，兜底用成员表里的 isMe）。
+final currentUserIdProvider = Provider<String>((ref) {
+  final fromSession = ref.watch(authProvider)?.userId;
+  if (fromSession != null && fromSession.isNotEmpty) return fromSession;
+  for (final m in ref.watch(membersByIdProvider).values) {
+    if (m.isMe) return m.id;
+  }
+  return '';
 });
 
 /// 我的头像地址（已换成当前 baseUrl 的主机，可直接给 Image.network）。

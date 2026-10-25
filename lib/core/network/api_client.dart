@@ -1,17 +1,10 @@
 import 'package:dio/dio.dart';
 
 import 'api_exception.dart';
-import 'mock_interceptor.dart';
 
 /// 全局网络入口。baseUrl 只有一个来源：登录页输入的地址。
 class ApiClient {
   ApiClient._();
-
-  /// 默认直连真实后端；需要假数据时用 --dart-define=USE_MOCK=true。
-  static const bool useMock = bool.fromEnvironment(
-    'USE_MOCK',
-    defaultValue: false,
-  );
 
   /// 允许 `192.168.1.10`、`192.168.1.10:8080`、`https://host` 三种写法。
   static String normalizeBaseUrl(String input) {
@@ -29,7 +22,6 @@ class ApiClient {
   static Dio create({
     required String baseUrl,
     String? token,
-    bool? mock,
   }) {
     final dio = Dio(
       BaseOptions(
@@ -54,10 +46,6 @@ class ApiClient {
         },
       ),
     );
-
-    if (mock ?? useMock) {
-      dio.interceptors.add(MockInterceptor());
-    }
 
     return dio;
   }

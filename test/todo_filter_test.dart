@@ -88,7 +88,7 @@ void main() {
   group('编辑权限', () {
     test('创建人可以编辑', () {
       final item = todo(id: '1', title: '自己建的');
-      expect(canEditTodo(item), isTrue);
+      expect(canEditTodo(item, meId: Members.me), isTrue);
     });
 
     test('对方建的不可以编辑', () {
@@ -104,7 +104,7 @@ void main() {
         updatedAt: DateTime(2026, 10, 25),
         rev: 1,
       );
-      expect(canEditTodo(item), isFalse);
+      expect(canEditTodo(item, meId: Members.me), isFalse);
     });
   });
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_theme.dart';
+import '../../../core/api/api_providers.dart';
 import '../../../core/db/app_database.dart';
 import '../../../shared/widgets/run_guarded.dart';
 import '../domain/wish_stats.dart';
@@ -44,6 +45,7 @@ class _WishDetail extends ConsumerWidget {
 
     final savings = ref.watch(savingsByWishProvider)[wishId] ?? const <WishSaving>[];
     final stats = statsFor(wish, savings);
+    final meId = ref.watch(currentUserIdProvider);
     final repo = ref.read(wishRepositoryProvider);
 
     return SafeArea(
@@ -126,7 +128,7 @@ class _WishDetail extends ConsumerWidget {
                   for (final entry in stats.byMember.entries)
                     Padding(
                       padding: const EdgeInsets.only(right: 10),
-                      child: _memberChip(entry.key, entry.value, muted),
+                      child: _memberChip(entry.key, entry.value, muted, meId),
                     ),
                 ],
               ),
@@ -240,6 +242,7 @@ class _WishDetail extends ConsumerWidget {
                   padding: const EdgeInsets.only(bottom: 8),
                   child: _SavingRow(
                     saving: s,
+                    meId: meId,
                     accent: accent,
                     onDelete: () async {
                       await runGuarded(
@@ -270,8 +273,8 @@ class _WishDetail extends ConsumerWidget {
     );
   }
 
-  Widget _memberChip(String memberId, int amount, Color muted) {
-    final isMe = memberId == Members.me;
+  Widget _memberChip(String memberId, int amount, Color muted, String meId) {
+    final isMe = memberId == meId;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -296,11 +299,13 @@ class _WishDetail extends ConsumerWidget {
 class _SavingRow extends StatelessWidget {
   const _SavingRow({
     required this.saving,
+    required this.meId,
     required this.accent,
     required this.onDelete,
   });
 
   final WishSaving saving;
+  final String meId;
   final Color accent;
   final VoidCallback onDelete;
 
@@ -308,7 +313,7 @@ class _SavingRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final muted = AppTheme.muted(context);
-    final isMe = saving.memberId == Members.me;
+    final isMe = saving.memberId == meId;
     final d = saving.savedAt;
 
     return Container(

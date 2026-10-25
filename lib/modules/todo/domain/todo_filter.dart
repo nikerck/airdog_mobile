@@ -6,8 +6,8 @@ bool isSameDay(DateTime a, DateTime b) =>
     a.year == b.year && a.month == b.month && a.day == b.day;
 
 /// 只有创建人能编辑（分享给对方的待办，对方只能看和完成）。
-bool canEditTodo(TodoItem item, {String me = 'u_me'}) =>
-    item.createdBy == me;
+bool canEditTodo(TodoItem item, {required String meId}) =>
+    item.createdBy == meId;
 
 /// 图片路径存在一列里用换行分隔，这里解析。
 List<String> parseImages(String raw) {

@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 
-import '../db/app_database.dart';
 import '../network/api_client.dart';
 
 class SpaceMember {
@@ -130,7 +129,7 @@ String memberName(
   if (id == null || id.isEmpty) return fallback;
   final member = byId[id];
   if (member != null && member.name.isNotEmpty) return member.name;
-  if (id == Members.me) return fallback;
+  // 查不到就显示 id，别猜「这就是我」
   return id;
 }
 

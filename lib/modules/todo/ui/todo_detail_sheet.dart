@@ -60,7 +60,7 @@ class _DetailBody extends ConsumerWidget {
     final todo = item;
     final done = todo.doneAt != null;
     final images = parseImages(todo.images);
-    final canEdit = canEditTodo(todo);
+    final canEdit = canEditTodo(todo, meId: ref.watch(currentUserIdProvider));
     final now = DateTime.now();
 
     return DraggableScrollableSheet(
