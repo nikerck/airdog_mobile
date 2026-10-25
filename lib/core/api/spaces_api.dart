@@ -9,6 +9,7 @@ class SpaceMember {
     required this.name,
     required this.initial,
     required this.isMe,
+    this.avatarUrl,
   });
 
   factory SpaceMember.fromJson(Map<String, dynamic> j) => SpaceMember(
@@ -16,6 +17,9 @@ class SpaceMember {
         name: (j['name'] ?? '').toString(),
         initial: (j['initial'] ?? '').toString(),
         isMe: j['isMe'] == true,
+        avatarUrl: (j['avatarUrl'] as String?)?.trim().isEmpty ?? true
+            ? null
+            : j['avatarUrl'] as String,
       );
 
   final String id;
@@ -23,11 +27,15 @@ class SpaceMember {
   final String initial;
   final bool isMe;
 
+  /// 服务端给的绝对地址，展示前要用 resolveMediaUrl 换成当前 baseUrl
+  final String? avatarUrl;
+
   Map<String, dynamic> toJson() => {
         'id': id,
         'name': name,
         'initial': initial,
         'isMe': isMe,
+        'avatarUrl': avatarUrl,
       };
 }
 

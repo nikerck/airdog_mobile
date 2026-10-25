@@ -60,7 +60,8 @@ class PeriodApi {
 
   Future<void> delete(String id) async {
     try {
-      await _dio.delete<dynamic>('/api/period/logs/$id');
+      final res = await _dio.delete<dynamic>('/api/period/logs/$id');
+      ApiClient.unwrap(res);
     } catch (e) {
       throw ApiClient.toApiException(e);
     }

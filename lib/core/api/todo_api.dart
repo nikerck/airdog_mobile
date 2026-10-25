@@ -68,7 +68,8 @@ class TodoApi {
 
   Future<void> delete(String id) async {
     try {
-      await _dio.delete<dynamic>('/api/todos/$id');
+      final res = await _dio.delete<dynamic>('/api/todos/$id');
+      ApiClient.unwrap(res);
     } catch (e) {
       throw ApiClient.toApiException(e);
     }

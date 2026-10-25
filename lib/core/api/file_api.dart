@@ -29,7 +29,8 @@ class FileApi {
 
   Future<void> delete(String fileId) async {
     try {
-      await _dio.delete<dynamic>('/api/files/$fileId');
+      final res = await _dio.delete<dynamic>('/api/files/$fileId');
+      ApiClient.unwrap(res);
     } catch (e) {
       throw ApiClient.toApiException(e);
     }

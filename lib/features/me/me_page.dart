@@ -3,6 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/theme/app_theme.dart';
+import '../../core/api/file_api.dart';
+import '../../core/auth/auth_api.dart';
+import '../../core/media/photo_store.dart';
+import '../../shared/widgets/run_guarded.dart';
+import '../../shared/widgets/user_avatar.dart';
+import 'ui/password_sheet.dart';
 import '../../core/api/api_providers.dart';
 import '../../core/api/spaces_api.dart';
 import '../../core/auth/auth_controller.dart';
@@ -26,6 +32,7 @@ class _MePageState extends ConsumerState<MePage> {
     final muted = AppTheme.muted(context);
     final session = ref.watch(authProvider);
     final appearance = ref.watch(appearanceProvider);
+    final avatarUrl = ref.watch(myAvatarUrlProvider);
     final partners = ref
         .watch(membersByIdProvider)
         .values
@@ -58,22 +65,11 @@ class _MePageState extends ConsumerState<MePage> {
               ),
               child: Row(
                 children: [
-                  Container(
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      (session?.userName ?? '我').characters.first,
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ),
+                  UserAvatar(
+                    size: 52,
+                    initial: (session?.userName ?? '我').characters.first,
+                    imageUrl: avatarUrl,
+                    onTap: () => _openAvatarSheet(context),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -100,6 +96,27 @@ class _MePageState extends ConsumerState<MePage> {
                     ),
                   ),
                 ],
+              ),
+            ),
+
+            // 账号安全
+            _sectionTitle('账号安全', muted),
+            Container(
+              decoration: BoxDecoration(
+                color: theme.cardTheme.color,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: theme.brightness == Brightness.dark
+                      ? const Color(0xFF252A35)
+                      : const Color(0xFFE3E0E9),
+                ),
+              ),
+              child: _row(
+                context,
+                leading: Icon(Icons.lock_outline_rounded, size: 20, color: muted),
+                title: '修改密码',
+                subtitle: '改完当前登录不会掉线',
+                onTap: () => _changePassword(context),
               ),
             ),
 
@@ -276,6 +293,87 @@ class _MePageState extends ConsumerState<MePage> {
           ],
         ),
       ),
+    );
+  }
+
+  Future<void> _openAvatarSheet(BuildContext context) async {
+    final hasAvatar = (ref.read(myAvatarUrlProvider) ?? '').isNotEmpty;
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Theme.of(context).cardTheme.color,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: const Text('从相册选择'),
+              onTap: () => Navigator.of(ctx).pop('pick'),
+            ),
+            if (hasAvatar)
+              ListTile(
+                leading: const Icon(Icons.delete_outline_rounded),
+                title: const Text('移除头像'),
+                onTap: () => Navigator.of(ctx).pop('clear'),
+              ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+    if (action == null || !context.mounted) return;
+
+    final dio = ref.read(apiDioProvider);
+    if (dio == null) {
+      _toast('未登录，无法修改头像');
+      return;
+    }
+
+    if (action == 'pick') {
+      final path = await PhotoStore().pickSingle();
+      if (path == null || !context.mounted) return;
+      await runGuarded(
+        context,
+        () async {
+          final file = await FileApi(dio).upload(path);
+          await AuthApi(dio).setAvatar(file.id);
+          ref.invalidate(spacesProvider);
+        },
+        successMessage: '头像已更新',
+      );
+    } else if (action == 'clear') {
+      await runGuarded(
+        context,
+        () async {
+          await AuthApi(dio).setAvatar(null);
+          ref.invalidate(spacesProvider);
+        },
+        successMessage: '头像已移除',
+      );
+    }
+  }
+
+  Future<void> _changePassword(BuildContext context) async {
+    final input = await showChangePasswordSheet(context);
+    if (input == null || !context.mounted) return;
+
+    final dio = ref.read(apiDioProvider);
+    if (dio == null) {
+      _toast('未登录，无法修改密码');
+      return;
+    }
+
+    await runGuarded(
+      context,
+      () => AuthApi(dio).changePassword(
+        currentPassword: input.current,
+        newPassword: input.next,
+      ),
+      successMessage: '密码已更新',
     );
   }
 

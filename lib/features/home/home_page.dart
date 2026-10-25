@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../app/theme/app_theme.dart';
 import '../../core/api/api_providers.dart';
 import '../../shared/widgets/duo_avatar.dart';
+import '../../shared/widgets/user_avatar.dart';
 import '../../core/api/spaces_api.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../modules/module.dart';
@@ -80,22 +81,11 @@ class HomePage extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
-                Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    (session?.userName ?? '我').characters.first,
-                    style: TextStyle(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 17,
-                    ),
-                  ),
+                UserAvatar(
+                  size: 42,
+                  initial: (session?.userName ?? '我').characters.first,
+                  imageUrl: ref.watch(myAvatarUrlProvider),
+                  onTap: () => context.go('/me'),
                 ),
               ],
             ),

@@ -59,7 +59,8 @@ class WishApi {
 
   Future<void> delete(String id) async {
     try {
-      await _dio.delete<dynamic>('/api/wishes/$id');
+      final res = await _dio.delete<dynamic>('/api/wishes/$id');
+      ApiClient.unwrap(res);
     } catch (e) {
       throw ApiClient.toApiException(e);
     }
@@ -110,7 +111,8 @@ class SavingApi {
 
   Future<void> delete(String wishId, String savingId) async {
     try {
-      await _dio.delete<dynamic>('/api/wishes/$wishId/savings/$savingId');
+      final res = await _dio.delete<dynamic>('/api/wishes/$wishId/savings/$savingId');
+      ApiClient.unwrap(res);
     } catch (e) {
       throw ApiClient.toApiException(e);
     }

@@ -9,6 +9,7 @@ import '../db/db_provider.dart';
 import '../network/api_client.dart';
 import '../settings/appearance.dart';
 import '../sync/sync_service.dart';
+import 'media_url.dart';
 import 'spaces_api.dart';
 
 /// 在线时才有 Dio；离线模式下为 null，仓库会走纯本地。
@@ -81,6 +82,20 @@ final membersByIdProvider = Provider<Map<String, SpaceMember>>((ref) {
     }
   }
   return const {};
+});
+
+/// 当前登录账号在成员表里那一条。
+final meMemberProvider = Provider<SpaceMember?>((ref) {
+  for (final m in ref.watch(membersByIdProvider).values) {
+    if (m.isMe) return m;
+  }
+  return null;
+});
+
+/// 我的头像地址（已换成当前 baseUrl 的主机，可直接给 Image.network）。
+final myAvatarUrlProvider = Provider<String?>((ref) {
+  final baseUrl = ref.watch(authProvider)?.baseUrl ?? '';
+  return resolveMediaUrl(ref.watch(meMemberProvider)?.avatarUrl, baseUrl);
 });
 
 /// 共享空间里除我之外的所有人。

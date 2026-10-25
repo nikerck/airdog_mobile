@@ -8,11 +8,13 @@ class LoginResult {
     required this.token,
     required this.userName,
     this.userId,
+    this.avatarUrl,
   });
 
   final String token;
   final String userName;
   final String? userId;
+  final String? avatarUrl;
 }
 
 class AuthApi {
@@ -32,7 +34,46 @@ class AuthApi {
         token: (data['token'] as String?) ?? '',
         userName: user is Map ? (user['name'] as String? ?? username) : username,
         userId: user is Map ? user['id'] as String? : null,
+        avatarUrl: user is Map ? user['avatarUrl'] as String? : null,
       );
+    } catch (e) {
+      throw ApiClient.toApiException(e);
+    }
+  }
+}
+
+extension AuthApiProfile on AuthApi {
+  /// 设置或清除头像；fileId 为 null 表示清除。
+  /// 返回更新后的 avatarUrl（可能为 null）。
+  Future<String?> setAvatar(String? fileId) async {
+    try {
+      final res = await _dio.patch<dynamic>(
+        '/api/auth/avatar',
+        data: {'fileId': fileId},
+      );
+      final data = ApiClient.unwrap(res);
+      final user = data['user'];
+      return user is Map ? user['avatarUrl'] as String? : null;
+    } catch (e) {
+      throw ApiClient.toApiException(e);
+    }
+  }
+
+  /// 改密码。当前密码错了服务端返回 401 / 1001，token 仍然有效。
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final res = await _dio.post<dynamic>(
+        '/api/auth/password',
+        data: {
+          'currentPassword': currentPassword,
+          'newPassword': newPassword,
+        },
+      );
+      // 服务端 4xx 不会抛异常（validateStatus < 500），必须解包才能发现失败
+      ApiClient.unwrap(res);
     } catch (e) {
       throw ApiClient.toApiException(e);
     }

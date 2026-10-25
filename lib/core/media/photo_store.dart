@@ -34,6 +34,29 @@ class PhotoStore {
     return saved;
   }
 
+  /// 只选一张（头像用），复制进头像目录。
+  Future<String?> pickSingle() async {
+    final picker = ImagePicker();
+    final file = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 90,
+      maxWidth: 1080,
+      maxHeight: 1080,
+    );
+    if (file == null) return null;
+
+    final dir = await getApplicationDocumentsDirectory();
+    final avatarDir = Directory(p.join(dir.path, 'avatars'));
+    await avatarDir.create(recursive: true);
+    final ext = p.extension(file.path).isEmpty ? '.jpg' : p.extension(file.path);
+    final dest = p.join(
+      avatarDir.path,
+      '${DateTime.now().millisecondsSinceEpoch}$ext',
+    );
+    await File(file.path).copy(dest);
+    return dest;
+  }
+
   /// 读图片宽高和体积；读不出来就返回 0，不影响使用。
   Future<PhotoMeta> readMeta(String path) async {
     try {
