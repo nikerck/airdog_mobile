@@ -1,0 +1,947 @@
+openapi: 3.0.3
+info:
+  title: 小窝 · 个人工作台 API
+  version: 1.0.0
+  description: |
+    前后端契约。字段名、单位、错误码以此为准，中文说明见同目录《接口约定.md》。
+    时间一律毫秒时间戳；金额一律整数分；所有响应都是 {code, message, data} 信封。
+
+servers:
+  - url: http://192.168.1.10:8080
+    description: 用户自填的服务器地址（开发期 http）
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: auth
+    description: 登录与会话
+  - name: spaces
+    description: 空间与成员
+  - name: files
+    description: 图片上传
+  - name: todos
+  - name: period
+  - name: wishes
+  - name: savings
+  - name: sync
+
+paths:
+  /api/auth/login:
+    post:
+      tags: [auth]
+      security: []
+      summary: 账号密码登录
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username: { type: string, example: zyy }
+                password: { type: string, example: "123456" }
+      responses:
+        '200':
+          description: 登录成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Envelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          token: { type: string, example: eyJhbGciOiJIUzI1NiJ9.x.y }
+                          expiresAt:
+                            type: integer
+                            format: int64
+                            description: token 过期时间（毫秒），有效期 30 天
+                          user: { $ref: '#/components/schemas/User' }
+        '401':
+          description: 账号或密码错误（code 1001）
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+              example: { code: 1001, message: 账号或密码错误, data: null }
+        '429':
+          description: 登录过于频繁
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  /api/auth/me:
+    get:
+      tags: [auth]
+      summary: 当前登录用户
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Envelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          user: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /api/auth/logout:
+    post:
+      tags: [auth]
+      summary: 退出登录（token 加入黑名单）
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Envelope' }
+
+  /api/spaces:
+    get:
+      tags: [spaces]
+      summary: 我的空间与成员（v1 固定两个空间）
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Envelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          spaces:
+                            type: array
+                            items: { $ref: '#/components/schemas/Space' }
+              example:
+                code: 0
+                message: ok
+                data:
+                  spaces:
+                    - id: sp_personal
+                      name: 我
+                      kind: personal
+                      members: [{ id: u_me, name: Zyy, initial: Z, isMe: true }]
+                    - id: sp_shared
+                      name: 我们
+                      kind: shared
+                      members:
+                        - { id: u_me, name: Zyy, initial: Z, isMe: true }
+                        - { id: u_momo, name: Momo, initial: M, isMe: false }
+
+  /api/files:
+    post:
+      tags: [files]
+      summary: 上传图片，返回 fileId
+      description: |
+        单文件 ≤ 10MB，类型限 jpeg/png/webp。按 sha256 去重：同图重复上传返回同一 id。
+        GET /api/files/{id} 不需要 Authorization（客户端用 Image.network 直接加载）。
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: 上传成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Envelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/FileObject' }
+              example:
+                code: 0
+                message: ok
+                data:
+                  id: file_9f2c1a
+                  url: http://192.168.1.10:8080/files/file_9f2c1a.jpg
+                  width: 1080
+                  height: 1440
+                  size: 312345
+                  sha256: 9f2c1a...
+        '400':
+          description: 文件类型不支持（code 5002）
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '413':
+          description: 文件超过 10MB（code 5001）
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  /api/files/{id}:
+    get:
+      tags: [files]
+      security: []
+      summary: 取图（二进制或 302 到 CDN）
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: 图片二进制
+          content:
+            image/jpeg:
+              schema: { type: string, format: binary }
+            image/png:
+              schema: { type: string, format: binary }
+            image/webp:
+              schema: { type: string, format: binary }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [files]
+      summary: 删除未被引用的图片
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Envelope' }
+
+  /api/todos:
+    get:
+      tags: [todos]
+      summary: 待办列表
+      parameters:
+        - $ref: '#/components/parameters/SpaceId'
+        - name: status
+          in: query
+          description: 全部 / 未完成 / 已完成
+          schema: { type: string, enum: [all, open, done], default: all }
+        - $ref: '#/components/parameters/Since'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Envelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          serverTime: { type: integer, format: int64 }
+                          items:
+                            type: array
+                            items: { $ref: '#/components/schemas/Todo' }
+                          hasMore: { type: boolean }
+                          nextSince: { type: integer, format: int64, nullable: true }
+              example:
+                code: 0
+                message: ok
+                data:
+                  serverTime: 1761300000000
+                  hasMore: false
+                  nextSince: null
+                  items:
+                    - id: todo_1761300000000
+                      spaceId: sp_shared
+                      title: 交房租
+                      content: 这个月 3200，转账后截图存底
+                      images: [file_9f2c1a]
+                      dueAt: 1761292800000
+                      doneAt: null
+                      doneBy: null
+                      createdBy: u_me
+                      createdAt: 1761200000000
+                      updatedAt: 1761200000000
+                      deletedAt: null
+                      rev: 1
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [todos]
+      summary: 新建待办
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: false
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TodoInput' }
+            example:
+              spaceId: sp_shared
+              title: 交房租
+              content: 这个月 3200
+              images: [file_9f2c1a]
+              dueAt: 1761292800000
+      responses:
+        '200':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Envelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          item: { $ref: '#/components/schemas/Todo' }
+        '400':
+          description: 标题为空或过长（code 2001）
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /api/todos/{id}:
+    patch:
+      tags: [todos]
+      summary: 修改待办（部分更新；rev 必传）
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TodoPatch' }
+            example:
+              title: 交房租（已转）
+              dueAt: null
+              rev: 3
+      responses:
+        '200':
+          description: 修改成功，rev 已 +1
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Envelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          item: { $ref: '#/components/schemas/Todo' }
+        '403':
+          description: 非创建人修改内容（code 2002）
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '409':
+          description: rev 不匹配（code 2003），data 返回服务端当前对象
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ErrorEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          item: { $ref: '#/components/schemas/Todo' }
+    delete:
+      tags: [todos]
+      summary: 软删除待办（幂等）
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Envelope' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /api/period/logs:
+    get:
+      tags: [period]
+      summary: 经期记录（仅个人空间，按 startedOn 升序）
+      parameters:
+        - $ref: '#/components/parameters/Since'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Envelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          serverTime: { type: integer, format: int64 }
+                          items:
+                            type: array
+                            items: { $ref: '#/components/schemas/PeriodLog' }
+              example:
+                code: 0
+                message: ok
+                data:
+                  serverTime: 1761300000000
+                  items:
+                    - id: period_1761000000000
+                      startedOn: 1761004800000
+                      endedOn: 1761350400000
+                      flow: 2
+                      symptoms: [cramp, headache]
+                      note: ""
+                      createdAt: 1761000000000
+                      updatedAt: 1761000000000
+                      deletedAt: null
+                      rev: 1
+    post:
+      tags: [period]
+      summary: 新增经期记录
+      description: 服务端强制写入个人空间；同一时间只允许一条未结束记录。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PeriodLogInput' }
+            example:
+              startedOn: 1761004800000
+              endedOn: null
+              flow: 2
+              symptoms: [cramp]
+              note: ""
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Envelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          item: { $ref: '#/components/schemas/PeriodLog' }
+        '400':
+          description: 日期不合法（code 3001）
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '403':
+          description: 试图写入共享空间（code 3003）
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '409':
+          description: 已有未结束记录（code 3002）
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  /api/period/logs/{id}:
+    patch:
+      tags: [period]
+      summary: 修改（endedOn=null 表示撤销结束）
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                startedOn: { type: integer, format: int64 }
+                endedOn: { type: integer, format: int64, nullable: true }
+                flow: { type: integer, minimum: 0, maximum: 3 }
+                symptoms:
+                  type: array
+                  items: { type: string }
+                note: { type: string }
+                rev: { type: integer }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Envelope' }
+        '409': { $ref: '#/components/responses/Conflict' }
+    delete:
+      tags: [period]
+      summary: 软删除
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Envelope' }
+
+  /api/wishes:
+    get:
+      tags: [wishes]
+      summary: 愿望列表
+      parameters:
+        - $ref: '#/components/parameters/SpaceId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Envelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          serverTime: { type: integer, format: int64 }
+                          items:
+                            type: array
+                            items: { $ref: '#/components/schemas/Wish' }
+    post:
+      tags: [wishes]
+      summary: 新建愿望
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/WishInput' }
+            example:
+              spaceId: sp_shared
+              title: 相机镜头 35mm
+              price: 189900
+              priority: 2
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Envelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          item: { $ref: '#/components/schemas/Wish' }
+
+  /api/wishes/{id}:
+    patch:
+      tags: [wishes]
+      summary: 修改愿望
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string }
+                price: { type: integer }
+                priority: { type: integer, minimum: 0, maximum: 3 }
+                link: { type: string }
+                note: { type: string }
+                rev: { type: integer }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Envelope' }
+        '409': { $ref: '#/components/responses/Conflict' }
+    delete:
+      tags: [wishes]
+      summary: 软删除
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Envelope' }
+
+  /api/wishes/{id}/savings:
+    get:
+      tags: [savings]
+      summary: 某愿望的攒钱明细
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Envelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          items:
+                            type: array
+                            items: { $ref: '#/components/schemas/Saving' }
+    post:
+      tags: [savings]
+      summary: 记一笔攒钱（amount 可为负）
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount]
+              properties:
+                amount: { type: integer, description: 整数分，可为负 }
+                memberId: { type: string, default: u_me }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Envelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          item: { $ref: '#/components/schemas/Saving' }
+
+  /api/wishes/{id}/savings/{sid}:
+    delete:
+      tags: [savings]
+      summary: 删除攒钱记录
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+        - { name: sid, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Envelope' }
+
+  /api/sync/changes:
+    get:
+      tags: [sync]
+      summary: 增量拉取（按 updatedAt 升序，含墓碑）
+      parameters:
+        - { name: since, in: query, required: true, schema: { type: integer, format: int64 } }
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Envelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/SyncData' }
+              example:
+                code: 0
+                message: ok
+                data:
+                  serverTime: 1761300000000
+                  hasMore: false
+                  nextSince: 1761299000000
+                  todos: []
+                  periodLogs: []
+                  wishes: []
+                  savings: []
+                  files: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    SpaceId:
+      name: spaceId
+      in: query
+      required: true
+      schema: { type: string, enum: [sp_personal, sp_shared] }
+    Since:
+      name: since
+      in: query
+      required: false
+      description: 只返回 updatedAt > since 的行（含墓碑）
+      schema: { type: integer, format: int64 }
+    Limit:
+      name: limit
+      in: query
+      required: false
+      schema: { type: integer, default: 200, maximum: 500 }
+
+  responses:
+    Unauthorized:
+      description: 未登录或 token 失效（code 1003）
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+          example: { code: 1003, message: 登录已过期，请重新登录, data: null }
+    Forbidden:
+      description: 无权限（code 1004 / 2002 / 3003）
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    NotFound:
+      description: 资源不存在（code 9004）
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    Conflict:
+      description: 版本冲突（code 2003 / 9002）
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  schemas:
+    Envelope:
+      type: object
+      required: [code, message, data]
+      properties:
+        code:
+          type: integer
+          example: 0
+          description: 0 表示成功，非 0 见错误码表
+        message:
+          type: string
+          example: ok
+          description: 可直接展示给用户的中文
+        data:
+          nullable: true
+
+    ErrorEnvelope:
+      type: object
+      required: [code, message]
+      properties:
+        code: { type: integer, example: 1001 }
+        message: { type: string, example: 账号或密码错误 }
+        data: { nullable: true, example: null }
+
+    Entity:
+      type: object
+      required: [id, createdAt, updatedAt, rev]
+      properties:
+        id: { type: string }
+        createdAt: { type: integer, format: int64 }
+        updatedAt: { type: integer, format: int64, description: 服务端生成，客户端不传 }
+        deletedAt: { type: integer, format: int64, nullable: true, description: 软删除墓碑 }
+        rev: { type: integer, example: 1, description: 乐观锁版本，每次写入 +1 }
+
+    User:
+      type: object
+      required: [id, name, initial]
+      properties:
+        id: { type: string, example: u_me }
+        name: { type: string, example: Zyy }
+        initial: { type: string, example: Z, description: 头像里的那个字 }
+
+    Member:
+      allOf:
+        - $ref: '#/components/schemas/User'
+        - type: object
+          properties:
+            isMe: { type: boolean }
+
+    Space:
+      type: object
+      required: [id, name, kind, members]
+      properties:
+        id: { type: string, example: sp_shared }
+        name: { type: string, example: 我们 }
+        kind: { type: string, enum: [personal, shared] }
+        members:
+          type: array
+          items: { $ref: '#/components/schemas/Member' }
+
+    FileObject:
+      type: object
+      required: [id, url, size, sha256]
+      properties:
+        id: { type: string, example: file_9f2c1a }
+        url: { type: string, description: 可直接 GET 的绝对地址 }
+        width: { type: integer }
+        height: { type: integer }
+        size: { type: integer, description: 字节 }
+        sha256: { type: string, description: 用于去重 }
+
+    Todo:
+      allOf:
+        - $ref: '#/components/schemas/Entity'
+        - type: object
+          required: [spaceId, title, content, images, createdBy]
+          properties:
+            spaceId: { type: string }
+            title: { type: string, maxLength: 120 }
+            content: { type: string, maxLength: 5000, description: 正文，可多行 }
+            images:
+              type: array
+              description: fileId 数组，顺序即展示顺序
+              maxItems: 9
+              items: { type: string }
+            dueAt: { type: integer, format: int64, nullable: true }
+            doneAt: { type: integer, format: int64, nullable: true }
+            doneBy: { type: string, nullable: true }
+            createdBy: { type: string, description: 只有这个人能改内容 }
+
+    TodoInput:
+      type: object
+      required: [spaceId, title]
+      properties:
+        spaceId: { type: string, enum: [sp_personal, sp_shared] }
+        title: { type: string, minLength: 1, maxLength: 120 }
+        content: { type: string, maxLength: 5000, default: "" }
+        images:
+          type: array
+          maxItems: 9
+          items: { type: string }
+          default: []
+        dueAt: { type: integer, format: int64, nullable: true }
+
+    TodoPatch:
+      type: object
+      required: [rev]
+      properties:
+        title: { type: string, minLength: 1, maxLength: 120 }
+        content: { type: string, maxLength: 5000 }
+        images:
+          type: array
+          maxItems: 9
+          items: { type: string }
+          description: 整体替换，不是追加
+        dueAt:
+          type: integer
+          format: int64
+          nullable: true
+          description: 传 null 表示清除到期时间；不传表示不改
+        doneAt: { type: integer, format: int64, nullable: true }
+        doneBy: { type: string, nullable: true }
+        rev: { type: integer, description: 必传，不匹配返回 409 }
+
+    PeriodLog:
+      allOf:
+        - $ref: '#/components/schemas/Entity'
+        - type: object
+          required: [startedOn, flow, symptoms]
+          properties:
+            startedOn: { type: integer, format: int64, description: 当天 00:00 的毫秒 }
+            endedOn: { type: integer, format: int64, nullable: true, description: null = 还在经期 }
+            flow: { type: integer, minimum: 0, maximum: 3 }
+            symptoms:
+              type: array
+              items:
+                type: string
+                enum: [cramp, headache, fatigue, mood, backache, insomnia]
+            note: { type: string, maxLength: 2000 }
+
+    PeriodLogInput:
+      type: object
+      required: [startedOn]
+      properties:
+        startedOn: { type: integer, format: int64 }
+        endedOn: { type: integer, format: int64, nullable: true }
+        flow: { type: integer, minimum: 0, maximum: 3, default: 2 }
+        symptoms:
+          type: array
+          items:
+            type: string
+            enum: [cramp, headache, fatigue, mood, backache, insomnia]
+          default: []
+        note: { type: string, maxLength: 2000, default: "" }
+
+    Wish:
+      allOf:
+        - $ref: '#/components/schemas/Entity'
+        - type: object
+          required: [spaceId, title, price, createdBy]
+          properties:
+            spaceId: { type: string }
+            title: { type: string, maxLength: 120 }
+            price: { type: integer, description: 整数分 }
+            priority: { type: integer, minimum: 0, maximum: 3 }
+            link: { type: string }
+            note: { type: string }
+            createdBy: { type: string }
+
+    WishInput:
+      type: object
+      required: [spaceId, title, price]
+      properties:
+        spaceId: { type: string, enum: [sp_personal, sp_shared] }
+        title: { type: string, minLength: 1, maxLength: 120 }
+        price: { type: integer, minimum: 0, maximum: 1000000, description: 整数分 }
+        priority: { type: integer, minimum: 0, maximum: 3, default: 1 }
+        link: { type: string, default: "" }
+        note: { type: string, default: "" }
+
+    Saving:
+      allOf:
+        - $ref: '#/components/schemas/Entity'
+        - type: object
+          required: [wishId, memberId, amount, savedAt]
+          properties:
+            wishId: { type: string }
+            memberId: { type: string, example: u_me }
+            amount: { type: integer, description: 整数分，可为负 }
+            savedAt: { type: integer, format: int64 }
+
+    SyncData:
+      type: object
+      required: [serverTime]
+      properties:
+        serverTime: { type: integer, format: int64 }
+        hasMore: { type: boolean }
+        nextSince: { type: integer, format: int64, nullable: true }
+        todos:
+          type: array
+          items: { $ref: '#/components/schemas/Todo' }
+        periodLogs:
+          type: array
+          items: { $ref: '#/components/schemas/PeriodLog' }
+        wishes:
+          type: array
+          items: { $ref: '#/components/schemas/Wish' }
+        savings:
+          type: array
+          items: { $ref: '#/components/schemas/Saving' }
+        files:
+          type: array
+          items: { $ref: '#/components/schemas/FileObject' }
