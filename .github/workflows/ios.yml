@@ -1,0 +1,70 @@
+name: iOS 打包
+
+# 产出：未签名的 .ipa（Artifact 里下载）
+# 未签名 = 不能直接装到 iPhone，需要用 Sideloadly / AltStore 之类的工具
+# 用你自己的 Apple ID 重签一次再装。要免重签就买 Apple 开发者账号走 ios-signed 流程。
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'lib/**'
+      - 'ios/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - '.github/workflows/ios.yml'
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ipa:
+    name: 未签名 IPA
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: 环境信息
+        run: |
+          flutter --version
+          xcodebuild -version
+
+      - name: 拉依赖
+        run: flutter pub get
+
+      - name: 静态检查
+        run: flutter analyze
+
+      - name: 单元测试
+        run: flutter test
+
+      - name: 编译 iOS（不签名）
+        run: flutter build ios --release --no-codesign
+
+      - name: 打成 ipa
+        run: |
+          set -euo pipefail
+          cd build/ios/iphoneos
+          rm -rf Payload App.ipa
+          mkdir -p Payload
+          cp -R Runner.app Payload/Runner.app
+          # 未签名包里带不了 embedded.mobileprovision，装的时候由签名工具补
+          rm -f Payload/Runner.app/embedded.mobileprovision || true
+          zip -qry App.ipa Payload
+          ls -lh App.ipa
+          unzip -l App.ipa | head -20
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: xiaowo-ios-unsigned
+          path: build/ios/iphoneos/App.ipa
+          if-no-files-found: error
+          retention-days: 30
