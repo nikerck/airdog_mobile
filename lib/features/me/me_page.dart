@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/theme/app_theme.dart';
+import '../../core/api/api_providers.dart';
+import '../../core/api/spaces_api.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../core/settings/appearance.dart';
 import '../../modules/module.dart';
@@ -24,6 +26,11 @@ class _MePageState extends ConsumerState<MePage> {
     final muted = AppTheme.muted(context);
     final session = ref.watch(authProvider);
     final appearance = ref.watch(appearanceProvider);
+    final partners = ref
+        .watch(membersByIdProvider)
+        .values
+        .where((m) => !m.isMe)
+        .toList();
 
     return Scaffold(
       body: SafeArea(
@@ -173,28 +180,45 @@ class _MePageState extends ConsumerState<MePage> {
               ),
               child: Column(
                 children: [
-                  _row(
-                    context,
-                    leading: _initialDot(context, 'M', const Color(0xFFA6522E)),
-                    title: 'Momo',
-                    subtitle: '已加入 · 可见待办、愿望单',
-                    trailing: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(9),
+                  for (var i = 0; i < partners.length; i++) ...[
+                    _row(
+                      context,
+                      leading: _initialDot(
+                        context,
+                        partners[i].initial.isEmpty
+                            ? partners[i].name.substring(0, 1)
+                            : partners[i].initial,
+                        _memberColor(i),
                       ),
-                      child: Text(
-                        '成员',
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: theme.colorScheme.primary,
+                      title: partners[i].name,
+                      subtitle: '已加入 · 可见待办、愿望单',
+                      trailing: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color:
+                              theme.colorScheme.primary.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(9),
+                        ),
+                        child: Text(
+                          '成员',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: theme.colorScheme.primary,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  const Divider(height: 1),
+                    const Divider(height: 1),
+                  ],
+                  if (partners.isEmpty)
+                    _row(
+                      context,
+                      leading: Icon(Icons.group_outlined, size: 20, color: muted),
+                      title: '还没有共享成员',
+                      subtitle: '对方登录同一个服务器，就能看到共享模块',
+                    ),
+                  if (partners.isEmpty) const Divider(height: 1),
                   _row(
                     context,
                     leading: Icon(Icons.person_add_alt_1_outlined,
@@ -223,7 +247,7 @@ class _MePageState extends ConsumerState<MePage> {
                 children: [
                   for (var i = 0; i < appModules.length; i++) ...[
                     if (i > 0) const Divider(height: 1),
-                    _moduleRow(context, appModules[i]),
+                    _moduleRow(context, appModules[i], partners),
                   ],
                 ],
               ),
@@ -260,7 +284,11 @@ class _MePageState extends ConsumerState<MePage> {
         child: Text(text, style: TextStyle(fontSize: 12, color: color)),
       );
 
-  Widget _moduleRow(BuildContext context, AppModule module) {
+  Widget _moduleRow(
+    BuildContext context,
+    AppModule module,
+    List<SpaceMember> partners,
+  ) {
     final theme = Theme.of(context);
     final enabled = !_disabled.contains(module.id);
     return Padding(
@@ -288,7 +316,7 @@ class _MePageState extends ConsumerState<MePage> {
                 const SizedBox(height: 3),
                 Text(
                   '${enabled ? '已启用' : '已关闭'} · '
-                  '${module.space == SpaceKind.personal ? '仅自己' : '与 Momo 共享'}',
+                  '${module.space == SpaceKind.personal ? '仅自己' : (partners.isEmpty ? '共享' : '与 ${partners.map((m) => m.name).join('、')} 共享')}',
                   style: TextStyle(fontSize: 11, color: AppTheme.muted(context)),
                 ),
               ],
@@ -356,6 +384,16 @@ class _MePageState extends ConsumerState<MePage> {
         ),
       ),
     );
+  }
+
+  Color _memberColor(int index) {
+    const palette = [
+      Color(0xFFA6522E),
+      Color(0xFF2F6FED),
+      Color(0xFF0E7C86),
+      Color(0xFF6750A4),
+    ];
+    return palette[index % palette.length];
   }
 
   Widget _initialDot(BuildContext context, String text, Color color) {

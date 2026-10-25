@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_theme.dart';
+import '../../../core/api/api_providers.dart';
+import '../../../core/api/spaces_api.dart';
 import '../../../core/db/app_database.dart';
 import '../../../shared/widgets/fade_slide_in.dart';
 import '../domain/todo_filter.dart';
@@ -105,6 +107,7 @@ class _TodoPageState extends ConsumerState<TodoPage> {
                                     child: _TodoTile(
                                       item: entry.value[i],
                                       now: now,
+                                      members: ref.watch(membersByIdProvider),
                                       onTap: () =>
                                           _openDetail(entry.value[i].id),
                                       onDelete: () => runGuarded(
@@ -206,6 +209,7 @@ class _TodoTile extends StatelessWidget {
   const _TodoTile({
     required this.item,
     required this.now,
+    required this.members,
     required this.onTap,
     required this.onDelete,
   });
@@ -215,11 +219,9 @@ class _TodoTile extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback onDelete;
 
-  String _name(String? id) => switch (id) {
-        Members.momo => 'Momo',
-        Members.me => 'Zyy',
-        _ => '我',
-      };
+  final Map<String, SpaceMember> members;
+
+  String _name(String? id) => memberName(members, id);
 
   @override
   Widget build(BuildContext context) {

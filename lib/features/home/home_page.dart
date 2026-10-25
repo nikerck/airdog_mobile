@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/theme/app_theme.dart';
+import '../../core/api/api_providers.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../modules/module.dart';
 import '../../modules/registry.dart';
@@ -17,6 +18,7 @@ class HomePage extends ConsumerWidget {
     final theme = Theme.of(context);
     final muted = AppTheme.muted(context);
     final session = ref.watch(authProvider);
+    final partner = ref.watch(partnerProvider);
     final dashboard = ref.watch(dashboardProvider);
     final recent = ref.watch(recentProvider);
     final taglines = ref.watch(moduleTaglinesProvider);
@@ -55,12 +57,14 @@ class HomePage extends ConsumerWidget {
                         children: [
                           _DuoAvatar(
                             first: (session?.userName ?? '我').characters.first,
-                            second: 'M',
+                            second: partner?.initial ?? '·',
                           ),
                           const SizedBox(width: 8),
                           Flexible(
                             child: Text(
-                              '与 Momo 共享 · ${sharedModules.map((m) => m.name).join(' / ')}',
+                              partner == null
+                                  ? '自己用 · ${sharedModules.map((m) => m.name).join(' / ')}'
+                                  : '与 ${partner.name} 共享 · ${sharedModules.map((m) => m.name).join(' / ')}',
                               style: TextStyle(fontSize: 11, color: muted),
                               overflow: TextOverflow.ellipsis,
                             ),

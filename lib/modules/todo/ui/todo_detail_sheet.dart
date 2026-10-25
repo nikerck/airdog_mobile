@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/app_theme.dart';
+import '../../../core/api/api_providers.dart';
+import '../../../core/api/spaces_api.dart';
 import '../../../core/db/app_database.dart';
 import '../domain/todo_filter.dart';
 import '../todo_providers.dart';
@@ -117,7 +119,7 @@ class _DetailBody extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            _metaLine(todo, now),
+            _metaLine(todo, now, ref.watch(membersByIdProvider)),
             style: TextStyle(fontSize: 11.5, color: muted),
           ),
           if (todo.content.isNotEmpty) ...[
@@ -197,7 +199,7 @@ class _DetailBody extends ConsumerWidget {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     child: Text(
-                      '只有 ${_name(todo.createdBy)} 能编辑这条',
+                      '只有 ${_name(todo.createdBy, ref.watch(membersByIdProvider))} 能编辑这条',
                       style: TextStyle(fontSize: 11.5, color: muted),
                     ),
                   ),
@@ -225,19 +227,16 @@ class _DetailBody extends ConsumerWidget {
   }
 }
 
-String _name(String? id) => switch (id) {
-      Members.momo => 'Momo',
-      Members.me => 'Zyy',
-      _ => '我',
-    };
+String _name(String? id, Map<String, SpaceMember> members) =>
+    memberName(members, id);
 
-String _metaLine(TodoItem item, DateTime now) {
-  final parts = <String>['${_name(item.createdBy)} 创建'];
+String _metaLine(TodoItem item, DateTime now, Map<String, SpaceMember> members) {
+  final parts = <String>['${_name(item.createdBy, members)} 创建'];
   if (item.dueAt != null) {
     parts.add('${formatDue(item.dueAt!, now)} 到期');
   }
   if (item.doneAt != null) {
-    parts.add('${_name(item.doneBy)} 完成');
+    parts.add('${_name(item.doneBy, members)} 完成');
   }
   return parts.join(' · ');
 }
