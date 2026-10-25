@@ -147,58 +147,11 @@ class TodoRepository {
     );
   }
 
-  /// 首次启动塞几条示例，避免打开是空白。
-  Future<void> seedIfEmpty() async {
-    if (sync != null) return; // 在线模式不塞示例数据，避免和服务器数据混在一起
-    final existing = await _db.select(_db.todoItems).get();
-    if (existing.isNotEmpty) return;
-
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final seeds = <({String title, String content, DateTime? due, bool done})>[
-      (
-        title: '交房租',
-        content: '这个月房租 3200，转账后记得截图存底。',
-        due: today.add(const Duration(hours: 18)),
-        done: false,
-      ),
-      (
-        title: '买猫粮',
-        content: '同款三文鱼味，2kg 装。',
-        due: today.add(const Duration(hours: 20)),
-        done: true,
-      ),
-      (
-        title: '提交周报',
-        content: '本周重点：登录改造、待办模块联调。',
-        due: today.add(const Duration(hours: 21)),
-        done: false,
-      ),
-      (
-        title: '续费域名',
-        content: '',
-        due: today.add(const Duration(days: 3)),
-        done: false,
-      ),
-    ];
-
-    for (var i = 0; i < seeds.length; i++) {
-      final s = seeds[i];
-      await _db.into(_db.todoItems).insert(
-            TodoItemsCompanion.insert(
-              id: 'seed_$i',
-              spaceId: Spaces.shared,
-              title: s.title,
-              content: Value(s.content),
-              dueAt: Value(s.due),
-              doneAt:
-                  Value(s.done ? now.subtract(const Duration(minutes: 40)) : null),
-              doneBy: Value(s.done ? Members.momo : null),
-              createdBy: const Value(Members.me),
-              createdAt: now,
-              updatedAt: now,
-            ),
-          );
-    }
+  /// 清掉早期版本塞进来的示例数据（id 以 seed_ 开头）。
+  ///
+  /// 这些行只存在于本地，服务端没有，删除时必然 404；
+  /// 留着就是「怎么删都删不掉」的那几条。启动时顺手清掉。
+  Future<int> purgeDemoRows() async {
+    return (_db.delete(_db.todoItems)..where((t) => t.id.like('seed_%'))).go();
   }
 }

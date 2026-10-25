@@ -13,31 +13,9 @@ final periodRepositoryProvider = Provider<PeriodRepository>(
   ),
 );
 
-/// 离线模式下塞三条示例；在线模式不塞，避免和服务器数据混在一起。
-final periodSeedProvider = FutureProvider<void>((ref) async {
-  if (ref.watch(syncServiceProvider) != null) return;
-
-  final repo = ref.watch(periodRepositoryProvider);
-  final db = ref.watch(databaseProvider);
-  final existing = await db.select(db.periodLogs).get();
-  if (existing.isNotEmpty) return;
-
-  final today = dayOnly(DateTime.now());
-  for (final offset in [79, 51, 23]) {
-    final start = today.subtract(Duration(days: offset));
-    await repo.add(
-      startedOn: start,
-      endedOn: start.add(const Duration(days: 4)),
-      flow: 2,
-      symptoms: const ['cramp'],
-    );
-  }
-});
-
-final periodLogsProvider = StreamProvider<List<PeriodLog>>((ref) {
-  ref.watch(periodSeedProvider);
-  return ref.watch(periodRepositoryProvider).watch();
-});
+final periodLogsProvider = StreamProvider<List<PeriodLog>>(
+  (ref) => ref.watch(periodRepositoryProvider).watch(),
+);
 
 final periodSummaryProvider = Provider<PeriodSummary>((ref) {
   final logs = ref.watch(periodLogsProvider).valueOrNull ?? const <PeriodLog>[];

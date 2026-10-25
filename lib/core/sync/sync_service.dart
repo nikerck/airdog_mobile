@@ -144,7 +144,13 @@ class SyncService {
   }
 
   Future<void> deleteTodo(TodoItem item) async {
-    await _todoApi.delete(item.id);
+    try {
+      await _todoApi.delete(item.id);
+    } on ApiException catch (e) {
+      // 服务端已经没有这条（别的设备删过 / 本地残留）就当删成功，
+      // 否则本地这条会永远删不掉：每次重试都 404。
+      if (!isAlreadyGone(e)) rethrow;
+    }
     await _softDeleteLocalTodo(item);
   }
 
@@ -176,7 +182,11 @@ class SyncService {
   }
 
   Future<void> deletePeriod(PeriodLog log) async {
-    await _periodApi.delete(log.id);
+    try {
+      await _periodApi.delete(log.id);
+    } on ApiException catch (e) {
+      if (!isAlreadyGone(e)) rethrow;
+    }
     await (db.update(db.periodLogs)..where((t) => t.id.equals(log.id))).write(
       PeriodLogsCompanion(
         deletedAt: Value(DateTime.now()),
@@ -226,7 +236,11 @@ class SyncService {
   }
 
   Future<void> deleteWish(Wish wish) async {
-    await _wishApi.delete(wish.id);
+    try {
+      await _wishApi.delete(wish.id);
+    } on ApiException catch (e) {
+      if (!isAlreadyGone(e)) rethrow;
+    }
     final now = DateTime.now();
     await (db.update(db.wishes)..where((t) => t.id.equals(wish.id))).write(
       WishesCompanion(
@@ -247,7 +261,11 @@ class SyncService {
   }
 
   Future<void> deleteSaving(Wish wish, WishSaving saving) async {
-    await _savingApi.delete(wish.id, saving.id);
+    try {
+      await _savingApi.delete(wish.id, saving.id);
+    } on ApiException catch (e) {
+      if (!isAlreadyGone(e)) rethrow;
+    }
     final now = DateTime.now();
     await (db.update(db.wishSavings)..where((t) => t.id.equals(saving.id))).write(
       WishSavingsCompanion(

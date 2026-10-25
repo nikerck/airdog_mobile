@@ -12,12 +12,12 @@ final todoRepositoryProvider = Provider<TodoRepository>(
   ),
 );
 
-/// 首次进入时塞几条示例（仅离线模式；在线模式以服务端为准）。
-final todoSeedProvider = FutureProvider<void>((ref) async {
-  await ref.watch(todoRepositoryProvider).seedIfEmpty();
+/// 启动时清掉早期版本留下的示例数据，只跑一次。
+final demoCleanupProvider = FutureProvider<void>((ref) async {
+  await ref.watch(todoRepositoryProvider).purgeDemoRows();
 });
 
 final todosProvider = StreamProvider<List<TodoItem>>((ref) {
-  ref.watch(todoSeedProvider);
+  ref.watch(demoCleanupProvider);
   return ref.watch(todoRepositoryProvider).watch();
 });
