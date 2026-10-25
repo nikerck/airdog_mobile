@@ -2983,6 +2983,692 @@ class WishSavingsCompanion extends UpdateCompanion<WishSaving> {
   }
 }
 
+class $PhotosTable extends Photos with TableInfo<$PhotosTable, Photo> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PhotosTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _fileIdMeta = const VerificationMeta('fileId');
+  @override
+  late final GeneratedColumn<String> fileId = GeneratedColumn<String>(
+    'file_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _pathMeta = const VerificationMeta('path');
+  @override
+  late final GeneratedColumn<String> path = GeneratedColumn<String>(
+    'path',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _captionMeta = const VerificationMeta(
+    'caption',
+  );
+  @override
+  late final GeneratedColumn<String> caption = GeneratedColumn<String>(
+    'caption',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _takenAtMeta = const VerificationMeta(
+    'takenAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> takenAt = GeneratedColumn<DateTime>(
+    'taken_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _widthMeta = const VerificationMeta('width');
+  @override
+  late final GeneratedColumn<int> width = GeneratedColumn<int>(
+    'width',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _heightMeta = const VerificationMeta('height');
+  @override
+  late final GeneratedColumn<int> height = GeneratedColumn<int>(
+    'height',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _sizeBytesMeta = const VerificationMeta(
+    'sizeBytes',
+  );
+  @override
+  late final GeneratedColumn<int> sizeBytes = GeneratedColumn<int>(
+    'size_bytes',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _revMeta = const VerificationMeta('rev');
+  @override
+  late final GeneratedColumn<int> rev = GeneratedColumn<int>(
+    'rev',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    fileId,
+    path,
+    caption,
+    takenAt,
+    width,
+    height,
+    sizeBytes,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    rev,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'photos';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Photo> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('file_id')) {
+      context.handle(
+        _fileIdMeta,
+        fileId.isAcceptableOrUnknown(data['file_id']!, _fileIdMeta),
+      );
+    }
+    if (data.containsKey('path')) {
+      context.handle(
+        _pathMeta,
+        path.isAcceptableOrUnknown(data['path']!, _pathMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_pathMeta);
+    }
+    if (data.containsKey('caption')) {
+      context.handle(
+        _captionMeta,
+        caption.isAcceptableOrUnknown(data['caption']!, _captionMeta),
+      );
+    }
+    if (data.containsKey('taken_at')) {
+      context.handle(
+        _takenAtMeta,
+        takenAt.isAcceptableOrUnknown(data['taken_at']!, _takenAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_takenAtMeta);
+    }
+    if (data.containsKey('width')) {
+      context.handle(
+        _widthMeta,
+        width.isAcceptableOrUnknown(data['width']!, _widthMeta),
+      );
+    }
+    if (data.containsKey('height')) {
+      context.handle(
+        _heightMeta,
+        height.isAcceptableOrUnknown(data['height']!, _heightMeta),
+      );
+    }
+    if (data.containsKey('size_bytes')) {
+      context.handle(
+        _sizeBytesMeta,
+        sizeBytes.isAcceptableOrUnknown(data['size_bytes']!, _sizeBytesMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('rev')) {
+      context.handle(
+        _revMeta,
+        rev.isAcceptableOrUnknown(data['rev']!, _revMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Photo map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Photo(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      fileId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}file_id'],
+      )!,
+      path: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}path'],
+      )!,
+      caption: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}caption'],
+      )!,
+      takenAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}taken_at'],
+      )!,
+      width: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}width'],
+      )!,
+      height: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}height'],
+      )!,
+      sizeBytes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}size_bytes'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      rev: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}rev'],
+      )!,
+    );
+  }
+
+  @override
+  $PhotosTable createAlias(String alias) {
+    return $PhotosTable(attachedDatabase, alias);
+  }
+}
+
+class Photo extends DataClass implements Insertable<Photo> {
+  final String id;
+
+  /// 服务端文件 id；离线添加时为空
+  final String fileId;
+
+  /// 本地副本，渲染用
+  final String path;
+  final String caption;
+  final DateTime takenAt;
+  final int width;
+  final int height;
+  final int sizeBytes;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final int rev;
+  const Photo({
+    required this.id,
+    required this.fileId,
+    required this.path,
+    required this.caption,
+    required this.takenAt,
+    required this.width,
+    required this.height,
+    required this.sizeBytes,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    required this.rev,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['file_id'] = Variable<String>(fileId);
+    map['path'] = Variable<String>(path);
+    map['caption'] = Variable<String>(caption);
+    map['taken_at'] = Variable<DateTime>(takenAt);
+    map['width'] = Variable<int>(width);
+    map['height'] = Variable<int>(height);
+    map['size_bytes'] = Variable<int>(sizeBytes);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    map['rev'] = Variable<int>(rev);
+    return map;
+  }
+
+  PhotosCompanion toCompanion(bool nullToAbsent) {
+    return PhotosCompanion(
+      id: Value(id),
+      fileId: Value(fileId),
+      path: Value(path),
+      caption: Value(caption),
+      takenAt: Value(takenAt),
+      width: Value(width),
+      height: Value(height),
+      sizeBytes: Value(sizeBytes),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      rev: Value(rev),
+    );
+  }
+
+  factory Photo.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Photo(
+      id: serializer.fromJson<String>(json['id']),
+      fileId: serializer.fromJson<String>(json['fileId']),
+      path: serializer.fromJson<String>(json['path']),
+      caption: serializer.fromJson<String>(json['caption']),
+      takenAt: serializer.fromJson<DateTime>(json['takenAt']),
+      width: serializer.fromJson<int>(json['width']),
+      height: serializer.fromJson<int>(json['height']),
+      sizeBytes: serializer.fromJson<int>(json['sizeBytes']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      rev: serializer.fromJson<int>(json['rev']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'fileId': serializer.toJson<String>(fileId),
+      'path': serializer.toJson<String>(path),
+      'caption': serializer.toJson<String>(caption),
+      'takenAt': serializer.toJson<DateTime>(takenAt),
+      'width': serializer.toJson<int>(width),
+      'height': serializer.toJson<int>(height),
+      'sizeBytes': serializer.toJson<int>(sizeBytes),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'rev': serializer.toJson<int>(rev),
+    };
+  }
+
+  Photo copyWith({
+    String? id,
+    String? fileId,
+    String? path,
+    String? caption,
+    DateTime? takenAt,
+    int? width,
+    int? height,
+    int? sizeBytes,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    int? rev,
+  }) => Photo(
+    id: id ?? this.id,
+    fileId: fileId ?? this.fileId,
+    path: path ?? this.path,
+    caption: caption ?? this.caption,
+    takenAt: takenAt ?? this.takenAt,
+    width: width ?? this.width,
+    height: height ?? this.height,
+    sizeBytes: sizeBytes ?? this.sizeBytes,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    rev: rev ?? this.rev,
+  );
+  Photo copyWithCompanion(PhotosCompanion data) {
+    return Photo(
+      id: data.id.present ? data.id.value : this.id,
+      fileId: data.fileId.present ? data.fileId.value : this.fileId,
+      path: data.path.present ? data.path.value : this.path,
+      caption: data.caption.present ? data.caption.value : this.caption,
+      takenAt: data.takenAt.present ? data.takenAt.value : this.takenAt,
+      width: data.width.present ? data.width.value : this.width,
+      height: data.height.present ? data.height.value : this.height,
+      sizeBytes: data.sizeBytes.present ? data.sizeBytes.value : this.sizeBytes,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      rev: data.rev.present ? data.rev.value : this.rev,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Photo(')
+          ..write('id: $id, ')
+          ..write('fileId: $fileId, ')
+          ..write('path: $path, ')
+          ..write('caption: $caption, ')
+          ..write('takenAt: $takenAt, ')
+          ..write('width: $width, ')
+          ..write('height: $height, ')
+          ..write('sizeBytes: $sizeBytes, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('rev: $rev')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    fileId,
+    path,
+    caption,
+    takenAt,
+    width,
+    height,
+    sizeBytes,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    rev,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Photo &&
+          other.id == this.id &&
+          other.fileId == this.fileId &&
+          other.path == this.path &&
+          other.caption == this.caption &&
+          other.takenAt == this.takenAt &&
+          other.width == this.width &&
+          other.height == this.height &&
+          other.sizeBytes == this.sizeBytes &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.rev == this.rev);
+}
+
+class PhotosCompanion extends UpdateCompanion<Photo> {
+  final Value<String> id;
+  final Value<String> fileId;
+  final Value<String> path;
+  final Value<String> caption;
+  final Value<DateTime> takenAt;
+  final Value<int> width;
+  final Value<int> height;
+  final Value<int> sizeBytes;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<int> rev;
+  final Value<int> rowid;
+  const PhotosCompanion({
+    this.id = const Value.absent(),
+    this.fileId = const Value.absent(),
+    this.path = const Value.absent(),
+    this.caption = const Value.absent(),
+    this.takenAt = const Value.absent(),
+    this.width = const Value.absent(),
+    this.height = const Value.absent(),
+    this.sizeBytes = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.rev = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PhotosCompanion.insert({
+    required String id,
+    this.fileId = const Value.absent(),
+    required String path,
+    this.caption = const Value.absent(),
+    required DateTime takenAt,
+    this.width = const Value.absent(),
+    this.height = const Value.absent(),
+    this.sizeBytes = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.rev = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       path = Value(path),
+       takenAt = Value(takenAt),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<Photo> custom({
+    Expression<String>? id,
+    Expression<String>? fileId,
+    Expression<String>? path,
+    Expression<String>? caption,
+    Expression<DateTime>? takenAt,
+    Expression<int>? width,
+    Expression<int>? height,
+    Expression<int>? sizeBytes,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<int>? rev,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (fileId != null) 'file_id': fileId,
+      if (path != null) 'path': path,
+      if (caption != null) 'caption': caption,
+      if (takenAt != null) 'taken_at': takenAt,
+      if (width != null) 'width': width,
+      if (height != null) 'height': height,
+      if (sizeBytes != null) 'size_bytes': sizeBytes,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (rev != null) 'rev': rev,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PhotosCompanion copyWith({
+    Value<String>? id,
+    Value<String>? fileId,
+    Value<String>? path,
+    Value<String>? caption,
+    Value<DateTime>? takenAt,
+    Value<int>? width,
+    Value<int>? height,
+    Value<int>? sizeBytes,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<int>? rev,
+    Value<int>? rowid,
+  }) {
+    return PhotosCompanion(
+      id: id ?? this.id,
+      fileId: fileId ?? this.fileId,
+      path: path ?? this.path,
+      caption: caption ?? this.caption,
+      takenAt: takenAt ?? this.takenAt,
+      width: width ?? this.width,
+      height: height ?? this.height,
+      sizeBytes: sizeBytes ?? this.sizeBytes,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      rev: rev ?? this.rev,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (fileId.present) {
+      map['file_id'] = Variable<String>(fileId.value);
+    }
+    if (path.present) {
+      map['path'] = Variable<String>(path.value);
+    }
+    if (caption.present) {
+      map['caption'] = Variable<String>(caption.value);
+    }
+    if (takenAt.present) {
+      map['taken_at'] = Variable<DateTime>(takenAt.value);
+    }
+    if (width.present) {
+      map['width'] = Variable<int>(width.value);
+    }
+    if (height.present) {
+      map['height'] = Variable<int>(height.value);
+    }
+    if (sizeBytes.present) {
+      map['size_bytes'] = Variable<int>(sizeBytes.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (rev.present) {
+      map['rev'] = Variable<int>(rev.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PhotosCompanion(')
+          ..write('id: $id, ')
+          ..write('fileId: $fileId, ')
+          ..write('path: $path, ')
+          ..write('caption: $caption, ')
+          ..write('takenAt: $takenAt, ')
+          ..write('width: $width, ')
+          ..write('height: $height, ')
+          ..write('sizeBytes: $sizeBytes, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('rev: $rev, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2991,6 +3677,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $FileCacheTable fileCache = $FileCacheTable(this);
   late final $WishesTable wishes = $WishesTable(this);
   late final $WishSavingsTable wishSavings = $WishSavingsTable(this);
+  late final $PhotosTable photos = $PhotosTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3001,6 +3688,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     fileCache,
     wishes,
     wishSavings,
+    photos,
   ];
 }
 
@@ -4464,6 +5152,333 @@ typedef $$WishSavingsTableProcessedTableManager =
       WishSaving,
       PrefetchHooks Function()
     >;
+typedef $$PhotosTableCreateCompanionBuilder =
+    PhotosCompanion Function({
+      required String id,
+      Value<String> fileId,
+      required String path,
+      Value<String> caption,
+      required DateTime takenAt,
+      Value<int> width,
+      Value<int> height,
+      Value<int> sizeBytes,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> rev,
+      Value<int> rowid,
+    });
+typedef $$PhotosTableUpdateCompanionBuilder =
+    PhotosCompanion Function({
+      Value<String> id,
+      Value<String> fileId,
+      Value<String> path,
+      Value<String> caption,
+      Value<DateTime> takenAt,
+      Value<int> width,
+      Value<int> height,
+      Value<int> sizeBytes,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> rev,
+      Value<int> rowid,
+    });
+
+class $$PhotosTableFilterComposer
+    extends Composer<_$AppDatabase, $PhotosTable> {
+  $$PhotosTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fileId => $composableBuilder(
+    column: $table.fileId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get path => $composableBuilder(
+    column: $table.path,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get caption => $composableBuilder(
+    column: $table.caption,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get takenAt => $composableBuilder(
+    column: $table.takenAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get width => $composableBuilder(
+    column: $table.width,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get height => $composableBuilder(
+    column: $table.height,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sizeBytes => $composableBuilder(
+    column: $table.sizeBytes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get rev => $composableBuilder(
+    column: $table.rev,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$PhotosTableOrderingComposer
+    extends Composer<_$AppDatabase, $PhotosTable> {
+  $$PhotosTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get fileId => $composableBuilder(
+    column: $table.fileId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get path => $composableBuilder(
+    column: $table.path,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get caption => $composableBuilder(
+    column: $table.caption,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get takenAt => $composableBuilder(
+    column: $table.takenAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get width => $composableBuilder(
+    column: $table.width,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get height => $composableBuilder(
+    column: $table.height,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sizeBytes => $composableBuilder(
+    column: $table.sizeBytes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get rev => $composableBuilder(
+    column: $table.rev,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PhotosTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PhotosTable> {
+  $$PhotosTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get fileId =>
+      $composableBuilder(column: $table.fileId, builder: (column) => column);
+
+  GeneratedColumn<String> get path =>
+      $composableBuilder(column: $table.path, builder: (column) => column);
+
+  GeneratedColumn<String> get caption =>
+      $composableBuilder(column: $table.caption, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get takenAt =>
+      $composableBuilder(column: $table.takenAt, builder: (column) => column);
+
+  GeneratedColumn<int> get width =>
+      $composableBuilder(column: $table.width, builder: (column) => column);
+
+  GeneratedColumn<int> get height =>
+      $composableBuilder(column: $table.height, builder: (column) => column);
+
+  GeneratedColumn<int> get sizeBytes =>
+      $composableBuilder(column: $table.sizeBytes, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get rev =>
+      $composableBuilder(column: $table.rev, builder: (column) => column);
+}
+
+class $$PhotosTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PhotosTable,
+          Photo,
+          $$PhotosTableFilterComposer,
+          $$PhotosTableOrderingComposer,
+          $$PhotosTableAnnotationComposer,
+          $$PhotosTableCreateCompanionBuilder,
+          $$PhotosTableUpdateCompanionBuilder,
+          (Photo, BaseReferences<_$AppDatabase, $PhotosTable, Photo>),
+          Photo,
+          PrefetchHooks Function()
+        > {
+  $$PhotosTableTableManager(_$AppDatabase db, $PhotosTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PhotosTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PhotosTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PhotosTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> fileId = const Value.absent(),
+                Value<String> path = const Value.absent(),
+                Value<String> caption = const Value.absent(),
+                Value<DateTime> takenAt = const Value.absent(),
+                Value<int> width = const Value.absent(),
+                Value<int> height = const Value.absent(),
+                Value<int> sizeBytes = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rev = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PhotosCompanion(
+                id: id,
+                fileId: fileId,
+                path: path,
+                caption: caption,
+                takenAt: takenAt,
+                width: width,
+                height: height,
+                sizeBytes: sizeBytes,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rev: rev,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                Value<String> fileId = const Value.absent(),
+                required String path,
+                Value<String> caption = const Value.absent(),
+                required DateTime takenAt,
+                Value<int> width = const Value.absent(),
+                Value<int> height = const Value.absent(),
+                Value<int> sizeBytes = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rev = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PhotosCompanion.insert(
+                id: id,
+                fileId: fileId,
+                path: path,
+                caption: caption,
+                takenAt: takenAt,
+                width: width,
+                height: height,
+                sizeBytes: sizeBytes,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rev: rev,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$PhotosTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PhotosTable,
+      Photo,
+      $$PhotosTableFilterComposer,
+      $$PhotosTableOrderingComposer,
+      $$PhotosTableAnnotationComposer,
+      $$PhotosTableCreateCompanionBuilder,
+      $$PhotosTableUpdateCompanionBuilder,
+      (Photo, BaseReferences<_$AppDatabase, $PhotosTable, Photo>),
+      Photo,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -4478,4 +5493,6 @@ class $AppDatabaseManager {
       $$WishesTableTableManager(_db, _db.wishes);
   $$WishSavingsTableTableManager get wishSavings =>
       $$WishSavingsTableTableManager(_db, _db.wishSavings);
+  $$PhotosTableTableManager get photos =>
+      $$PhotosTableTableManager(_db, _db.photos);
 }

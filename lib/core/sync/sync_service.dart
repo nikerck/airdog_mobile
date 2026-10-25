@@ -46,6 +46,12 @@ class SyncService {
 
   Future<int> pullAll() async {
     var since = cursor;
+
+    // 本地被清空（重装/换机/异常）但游标还在的话，增量永远拉不到东西，
+    // 这种情况退回全量。判断依据只看会被同步的表。
+    if (since > 0 && await _localIsEmpty()) {
+      since = 0;
+    }
     var guard = 0;
     var pulled = 0;
 
@@ -77,6 +83,15 @@ class SyncService {
 
     await prefs.setInt(_kSince, since);
     return pulled;
+  }
+
+  Future<bool> _localIsEmpty() async {
+    final todos = await db.select(db.todoItems).get();
+    if (todos.isNotEmpty) return false;
+    final logs = await db.select(db.periodLogs).get();
+    if (logs.isNotEmpty) return false;
+    final wishes = await db.select(db.wishes).get();
+    return wishes.isEmpty;
   }
 
   // ---------------------------------------------------------------- 待办（写）

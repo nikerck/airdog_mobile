@@ -99,3 +99,29 @@ class WishSavings extends Table {
   @override
   Set<Column> get primaryKey => {id};
 }
+
+/// 相册照片。
+///
+/// 图片本身存在服务端（POST /api/files），这里只存索引 + 本地副本路径。
+/// 服务端暂时没有相册表，所以索引是单机的；换设备后需要 /api/photos 才能恢复（见 docs/api）。
+class Photos extends Table {
+  TextColumn get id => text()();
+
+  /// 服务端文件 id；离线添加时为空
+  TextColumn get fileId => text().withDefault(const Constant(''))();
+
+  /// 本地副本，渲染用
+  TextColumn get path => text()();
+  TextColumn get caption => text().withDefault(const Constant(''))();
+  DateTimeColumn get takenAt => dateTime()();
+  IntColumn get width => integer().withDefault(const Constant(0))();
+  IntColumn get height => integer().withDefault(const Constant(0))();
+  IntColumn get sizeBytes => integer().withDefault(const Constant(0))();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+  IntColumn get rev => integer().withDefault(const Constant(1))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}

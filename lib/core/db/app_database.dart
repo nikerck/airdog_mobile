@@ -5,13 +5,13 @@ import 'tables.dart';
 
 part 'app_database.g.dart';
 
-@DriftDatabase(tables: [TodoItems, PeriodLogs, FileCache, Wishes, WishSavings])
+@DriftDatabase(tables: [TodoItems, PeriodLogs, FileCache, Wishes, WishSavings, Photos])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor])
       : super(executor ?? driftDatabase(name: 'xiaowo'));
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -37,6 +37,10 @@ class AppDatabase extends _$AppDatabase {
           if (from < 5) {
             await m.createTable(wishes);
             await m.createTable(wishSavings);
+          }
+          // v5 → v6：相册
+          if (from < 6) {
+            await m.createTable(photos);
           }
         },
         beforeOpen: (details) async {

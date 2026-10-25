@@ -27,6 +27,14 @@ class FileApi {
     }
   }
 
+  Future<void> delete(String fileId) async {
+    try {
+      await _dio.delete<dynamic>('/api/files/$fileId');
+    } catch (e) {
+      throw ApiClient.toApiException(e);
+    }
+  }
+
   /// 下载到本地，返回写入路径。GET /api/files/{id} 不需要 token。
   Future<String> download(String fileId, String savePath) async {
     try {
