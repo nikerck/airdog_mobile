@@ -1,8 +1,0 @@
-ci: GitHub Actions 打 iOS 包
-
-- 新增 .github/workflows/ios.yml：push 到 main 自动跑，产出未签名 ipa
-  flutter analyze + test -> build ios --no-codesign -> 手动打包 Payload -> 上传 artifact
-- ios/Runner/Info.plist：显示名改「小窝」，补相册/相机/局域网权限说明
-  （缺这几个 key，打开相册会被 iOS 直接杀进程）
-- docs/ios-打包.md：两条路线（免费重签 7 天 / 付费账号出签名包）、
-  签名工作流的 secrets 配置、ExportOptions.plist 模板、常见坑
