@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -26,6 +27,31 @@ final routerProvider = Provider<GoRouter>((ref) {
           builder: (context, state) => module.buildPage(context),
         ),
     ],
+    errorBuilder: (context, state) => Scaffold(
+      appBar: AppBar(title: const Text('页面走丢了')),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.explore_off_outlined, size: 44),
+              const SizedBox(height: 14),
+              Text(
+                '没有找到 ${state.matchedLocation}',
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 13),
+              ),
+              const SizedBox(height: 18),
+              FilledButton(
+                onPressed: () => GoRouter.of(context).go('/home'),
+                child: const Text('回到工作台'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
     redirect: (context, state) {
       final session = ref.read(authProvider);
       final atLogin = state.matchedLocation == '/login';

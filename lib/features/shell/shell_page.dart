@@ -6,6 +6,7 @@ import '../../core/api/api_providers.dart';
 import '../../features/album/album_page.dart';
 import '../../features/home/home_page.dart';
 import '../../features/me/me_page.dart';
+import 'shell_tab.dart';
 
 /// 三个 tab 的外壳。模块页是 push 上来的，不在这里。
 class ShellPage extends ConsumerStatefulWidget {
@@ -39,6 +40,8 @@ class _ShellPageState extends ConsumerState<ShellPage> {
       duration: const Duration(milliseconds: 320),
       curve: Curves.easeOutCubic,
     );
+    // 其它页面（比如首页头像）也能要求切 tab
+    ref.read(shellTabProvider.notifier).state = i;
   }
 
   @override
@@ -52,12 +55,19 @@ class _ShellPageState extends ConsumerState<ShellPage> {
     });
     ref.watch(startupSyncProvider);
 
+    ref.listen<int>(shellTabProvider, (previous, next) {
+      if (next != _index) _go(next);
+    });
+
     return Scaffold(
       body: PageView(
         controller: _controller,
         // 只允许点导航切换，避免和列表横滑冲突
         physics: const NeverScrollableScrollPhysics(),
-        onPageChanged: (i) => setState(() => _index = i),
+        onPageChanged: (i) {
+          setState(() => _index = i);
+          ref.read(shellTabProvider.notifier).state = i;
+        },
         children: _pages,
       ),
       bottomNavigationBar: NavigationBar(

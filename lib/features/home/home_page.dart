@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/theme/app_theme.dart';
 import '../../core/api/api_providers.dart';
+import '../../features/shell/shell_tab.dart';
 import '../../shared/widgets/duo_avatar.dart';
 import '../../shared/widgets/user_avatar.dart';
 import '../../core/api/spaces_api.dart';
@@ -85,7 +86,8 @@ class HomePage extends ConsumerWidget {
                   size: 42,
                   initial: (session?.userName ?? '我').characters.first,
                   imageUrl: ref.watch(myAvatarUrlProvider),
-                  onTap: () => context.go('/me'),
+                  // 底部 tab 不是路由，直接切过去
+                  onTap: () => ref.read(shellTabProvider.notifier).state = 2,
                 ),
               ],
             ),
