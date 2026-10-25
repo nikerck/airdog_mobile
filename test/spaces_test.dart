@@ -31,6 +31,52 @@ void main() {
     });
   });
 
+  group('多人共享', () {
+    final three = [
+      member('u_me', 'Zyy', isMe: true),
+      member('u_momo', 'Momo'),
+      member('u_a', '阿哲'),
+      member('u_b', '小美'),
+    ];
+
+    test('取出所有人（不含自己）', () {
+      expect(pickPartners(three).map((m) => m.id), ['u_momo', 'u_a', 'u_b']);
+      expect(pickPartners([member('u_me', 'Zyy', isMe: true)]), isEmpty);
+    });
+  });
+
+  group('共享文案', () {
+    test('没有伙伴', () {
+      expect(sharingTitle(const []), '自己用');
+    });
+
+    test('一个人', () {
+      expect(sharingTitle([member('u_momo', 'Momo')]), '与 Momo 共享');
+    });
+
+    test('两个人全列出来', () {
+      expect(
+        sharingTitle([member('u_a', '阿哲'), member('u_b', '小美')]),
+        '与 阿哲、小美 共享',
+      );
+    });
+
+    test('三个人折叠成「等 N 人」', () {
+      expect(
+        sharingTitle([
+          member('u_momo', 'Momo'),
+          member('u_a', '阿哲'),
+          member('u_b', '小美'),
+        ]),
+        '与 Momo、阿哲 等 3 人共享',
+      );
+    });
+
+    test('名字为空也不会出现空档', () {
+      expect(sharingTitle([member('u_x', '')]), '共享');
+    });
+  });
+
   group('显示名', () {
     final byId = {
       'u_me': member('u_me', 'Zyy', initial: 'Z', isMe: true),

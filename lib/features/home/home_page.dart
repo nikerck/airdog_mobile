@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/theme/app_theme.dart';
 import '../../core/api/api_providers.dart';
+import '../../shared/widgets/duo_avatar.dart';
+import '../../core/api/spaces_api.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../modules/module.dart';
 import '../../modules/registry.dart';
@@ -18,7 +20,7 @@ class HomePage extends ConsumerWidget {
     final theme = Theme.of(context);
     final muted = AppTheme.muted(context);
     final session = ref.watch(authProvider);
-    final partner = ref.watch(partnerProvider);
+    final partners = ref.watch(partnersProvider);
     final dashboard = ref.watch(dashboardProvider);
     final recent = ref.watch(recentProvider);
     final taglines = ref.watch(moduleTaglinesProvider);
@@ -55,16 +57,19 @@ class HomePage extends ConsumerWidget {
                       const SizedBox(height: 10),
                       Row(
                         children: [
-                          _DuoAvatar(
+                          DuoAvatar(
                             first: (session?.userName ?? '我').characters.first,
-                            second: partner?.initial ?? '·',
+                            second: partners.isEmpty
+                                ? null
+                                : (partners.first.initial.isEmpty
+                                    ? partners.first.name.substring(0, 1)
+                                    : partners.first.initial),
+                            extra: partners.length > 1 ? partners.length - 1 : 0,
                           ),
                           const SizedBox(width: 8),
                           Flexible(
                             child: Text(
-                              partner == null
-                                  ? '自己用 · ${sharedModules.map((m) => m.name).join(' / ')}'
-                                  : '与 ${partner.name} 共享 · ${sharedModules.map((m) => m.name).join(' / ')}',
+                              '${sharingTitle(partners)} · ${sharedModules.map((m) => m.name).join(' / ')}',
                               style: TextStyle(fontSize: 11, color: muted),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -389,53 +394,10 @@ class _ModuleCard extends StatelessWidget {
                   ),
                 )
               else
-                _DuoAvatar(first: 'Z', second: 'M'),
+                DuoAvatar(first: 'Z', second: 'M'),
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _DuoAvatar extends StatelessWidget {
-  const _DuoAvatar({required this.first, required this.second});
-
-  final String first;
-  final String second;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _dot(theme, first, theme.colorScheme.primary, 0),
-        Transform.translate(
-          offset: const Offset(-6, 0),
-          child: _dot(theme, second, const Color(0xFFA6522E), 0),
-        ),
-      ],
-    );
-  }
-
-  Widget _dot(ThemeData theme, String text, Color color, double inset) {
-    return Container(
-      width: 16,
-      height: 16,
-      margin: EdgeInsets.only(left: inset),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.16),
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: theme.cardTheme.color ?? theme.colorScheme.surface,
-          width: 1.4,
-        ),
-      ),
-      alignment: Alignment.center,
-      child: Text(
-        text,
-        style: TextStyle(fontSize: 8, fontWeight: FontWeight.w700, color: color),
       ),
     );
   }

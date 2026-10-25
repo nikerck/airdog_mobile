@@ -88,11 +88,29 @@ class SpacesApi {
 }
 
 /// 共享空间里「不是自己」的那个人；没有就返回 null。
+///
+/// 单伙伴场景（比如「只有 X 能编辑」）用这个；多人场景用 [pickPartners]。
 SpaceMember? pickPartner(List<SpaceMember> members) {
   for (final m in members) {
     if (!m.isMe) return m;
   }
   return null;
+}
+
+/// 共享空间里除我之外的所有人，按接口返回顺序。
+List<SpaceMember> pickPartners(List<SpaceMember> members) =>
+    [for (final m in members) if (!m.isMe) m];
+
+/// 「与 X 共享」这句文案。人多时只列前两个，其余折叠成「等 N 人」。
+String sharingTitle(List<SpaceMember> partners) {
+  if (partners.isEmpty) return '自己用';
+
+  final names =
+      partners.map((m) => m.name.trim()).where((n) => n.isNotEmpty).toList();
+  if (names.isEmpty) return '共享';
+  if (names.length == 1) return '与 ${names.first} 共享';
+  if (names.length == 2) return '与 ${names.join('、')} 共享';
+  return '与 ${names.take(2).join('、')} 等 ${names.length} 人共享';
 }
 
 /// id → 显示名。查不到就退回 id，再不行给个兜底词。

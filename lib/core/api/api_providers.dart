@@ -83,8 +83,14 @@ final membersByIdProvider = Provider<Map<String, SpaceMember>>((ref) {
   return const {};
 });
 
-/// 共享给我的那个人（目前只支持一个人）。
-final partnerProvider = Provider<SpaceMember?>((ref) {
+/// 共享空间里除我之外的所有人。
+final partnersProvider = Provider<List<SpaceMember>>((ref) {
   final members = ref.watch(membersByIdProvider).values.toList();
-  return pickPartner(members);
+  return pickPartners(members);
+});
+
+/// 第一个共享伙伴（单人场景用；没有就 null）。
+final partnerProvider = Provider<SpaceMember?>((ref) {
+  final partners = ref.watch(partnersProvider);
+  return partners.isEmpty ? null : partners.first;
 });
