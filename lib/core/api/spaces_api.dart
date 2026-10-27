@@ -125,6 +125,30 @@ String sharingTitle(List<SpaceMember> partners) {
   return '与 ${names.take(2).join('、')} 等 ${names.length} 人共享';
 }
 
+/// 两份成员数据是否完全一样（用来判断「值不值得刷新界面」）。
+///
+/// 轮询每 30 秒拉一次成员，绝大多数时候内容没变；
+/// 比对一下能避免整棵 UI 树无谓重建。
+bool spacesEqual(List<SpaceInfo> a, List<SpaceInfo> b) {
+  if (identical(a, b)) return true;
+  if (a.length != b.length) return false;
+  for (var i = 0; i < a.length; i++) {
+    final x = a[i];
+    final y = b[i];
+    if (x.id != y.id || x.name != y.name || x.kind != y.kind) return false;
+    if (x.members.length != y.members.length) return false;
+    for (var j = 0; j < x.members.length; j++) {
+      final m = x.members[j];
+      final n = y.members[j];
+      if (m.id != n.id || m.name != n.name || m.initial != n.initial) {
+        return false;
+      }
+      if (m.isMe != n.isMe || m.avatarUrl != n.avatarUrl) return false;
+    }
+  }
+  return true;
+}
+
 /// id → 显示名。查不到就退回 id，再不行给个兜底词。
 String memberName(
   Map<String, SpaceMember> byId,

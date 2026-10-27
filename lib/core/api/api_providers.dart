@@ -73,12 +73,9 @@ final syncPollerProvider = Provider<SyncPoller>((ref) {
       if (sync == null) return 0;
       final pulled = await sync.pullAll();
 
-      // 启动时后端没起来的话，成员列表会停在空状态（首页显示「自己用」）。
-      // 轮询既然连通了，就顺手补一次，不用等用户重启 App。
-      final spaces = ref.read(spacesProvider).valueOrNull;
-      if (spaces == null || spaces.isEmpty) {
-        ref.invalidate(spacesProvider);
-      }
+      // 顺手刷新成员信息：对方改头像/昵称后，最多 30 秒这边就能看到。
+      // 内容没变的话 refresh 内部会直接返回，不触发重建。
+      await ref.read(spacesProvider.notifier).refresh();
       return pulled;
     },
   );
@@ -96,24 +93,53 @@ final startupSyncProvider = FutureProvider<int>((ref) async {
 const _kSpacesCache = 'spaces.cache';
 
 /// 空间与成员：以服务端为准，失败时退回上次缓存的副本。
-final spacesProvider = FutureProvider<List<SpaceInfo>>((ref) async {
-  final prefs = ref.watch(sharedPreferencesProvider);
-  final dio = ref.watch(apiDioProvider);
-  if (dio == null) return _readCache(prefs);
+///
+/// 用 Notifier 而不是 FutureProvider，是因为**头像/昵称会变**：
+/// 轮询要能主动拉一次，并且内容没变时不要触发全界面重建。
+final spacesProvider =
+    AsyncNotifierProvider<SpacesController, List<SpaceInfo>>(
+  SpacesController.new,
+);
 
-  try {
-    final spaces = await SpacesApi(dio).list();
-    if (spaces.isNotEmpty) {
-      await prefs.setString(
-        _kSpacesCache,
-        jsonEncode(spaces.map((s) => s.toJson()).toList()),
-      );
+class SpacesController extends AsyncNotifier<List<SpaceInfo>> {
+  @override
+  Future<List<SpaceInfo>> build() => _load(fallbackToCache: true);
+
+  /// 拉一次最新的空间/成员信息。
+  ///
+  /// [silent] = true 时：失败不抛错、内容没变不更新状态（轮询用）；
+  /// 手动改完头像后调用可以传 false，确保界面立刻用上新值。
+  Future<void> refresh({bool silent = true}) async {
+    try {
+      final next = await _load(fallbackToCache: false);
+      final prev = state.valueOrNull ?? const <SpaceInfo>[];
+      if (spacesEqual(prev, next)) return;
+      state = AsyncData(next);
+    } catch (e) {
+      if (!silent) rethrow;
     }
-    return spaces;
-  } catch (_) {
-    return _readCache(prefs);
   }
-});
+
+  Future<List<SpaceInfo>> _load({required bool fallbackToCache}) async {
+    final prefs = ref.read(sharedPreferencesProvider);
+    final dio = ref.read(apiDioProvider);
+    if (dio == null) return _readCache(prefs);
+
+    try {
+      final spaces = await SpacesApi(dio).list();
+      if (spaces.isNotEmpty) {
+        await prefs.setString(
+          _kSpacesCache,
+          jsonEncode(spaces.map((s) => s.toJson()).toList()),
+        );
+      }
+      return spaces;
+    } catch (_) {
+      if (!fallbackToCache) rethrow;
+      return _readCache(prefs);
+    }
+  }
+}
 
 List<SpaceInfo> _readCache(SharedPreferences prefs) {
   try {

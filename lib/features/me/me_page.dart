@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/theme/app_theme.dart';
 import '../../core/api/file_api.dart';
+import '../../core/api/media_url.dart';
 import '../../core/auth/auth_api.dart';
 import '../../core/media/photo_store.dart';
 import '../../shared/widgets/run_guarded.dart';
@@ -202,12 +203,17 @@ class _MePageState extends ConsumerState<MePage> {
                   for (var i = 0; i < partners.length; i++) ...[
                     _row(
                       context,
-                      leading: _initialDot(
-                        context,
-                        partners[i].initial.isEmpty
+                      leading: UserAvatar(
+                        size: 36,
+                        initial: partners[i].initial.isEmpty
                             ? partners[i].name.substring(0, 1)
                             : partners[i].initial,
-                        _memberColor(i),
+                        imageUrl: resolveMediaUrl(
+                          partners[i].avatarUrl,
+                          session?.baseUrl ?? '',
+                        ),
+                        background: _memberColor(i).withValues(alpha: 0.16),
+                        foreground: _memberColor(i),
                       ),
                       title: partners[i].name,
                       subtitle: '已加入 · 可见待办、愿望单',
@@ -343,7 +349,7 @@ class _MePageState extends ConsumerState<MePage> {
         () async {
           final file = await FileApi(dio).upload(path);
           await AuthApi(dio).setAvatar(file.id);
-          ref.invalidate(spacesProvider);
+          await ref.read(spacesProvider.notifier).refresh(silent: false);
         },
         successMessage: '头像已更新',
       );
@@ -352,7 +358,7 @@ class _MePageState extends ConsumerState<MePage> {
         context,
         () async {
           await AuthApi(dio).setAvatar(null);
-          ref.invalidate(spacesProvider);
+          await ref.read(spacesProvider.notifier).refresh(silent: false);
         },
         successMessage: '头像已移除',
       );
@@ -494,22 +500,6 @@ class _MePageState extends ConsumerState<MePage> {
       Color(0xFF6750A4),
     ];
     return palette[index % palette.length];
-  }
-
-  Widget _initialDot(BuildContext context, String text, Color color) {
-    return Container(
-      width: 36,
-      height: 36,
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.16),
-        shape: BoxShape.circle,
-      ),
-      alignment: Alignment.center,
-      child: Text(
-        text,
-        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: color),
-      ),
-    );
   }
 
   void _toast(String message) {
