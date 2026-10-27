@@ -1,3 +1,8 @@
+/// 待办的 CRUD 接口。
+///
+/// PATCH 的语义：只传要改的字段；`dueAt: null` 表示「清除到期时间」，
+/// 而不是「不修改」—— 这两者在后端是不同分支。
+library;
 import 'package:dio/dio.dart';
 
 import '../network/api_client.dart';

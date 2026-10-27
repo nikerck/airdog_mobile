@@ -1,3 +1,8 @@
+/// 编辑待办（整页，不是弹层）。
+///
+/// 为什么用整页：字段多（标题、正文、图片、时间），弹层放不下，
+/// 而且编辑过程中不希望被手势下滑关掉。
+library;
 import 'dart:io';
 
 import 'package:flutter/material.dart';

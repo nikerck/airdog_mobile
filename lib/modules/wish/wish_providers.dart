@@ -1,3 +1,7 @@
+/// 愿望 provider：仓库、愿望流、攒钱记录流、按愿望分组的攒钱表。
+///
+/// 卡片上的「已攒 / 还差 / 百分比」都由 domain/wish_stats.dart 算，页面不参与。
+library;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api/api_providers.dart';

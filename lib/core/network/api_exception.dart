@@ -1,3 +1,7 @@
+/// 网络错误的统一出口。
+///
+/// 页面只需要 `e.message`，不需要认识 DioException；
+/// 需要区分行为的地方看 `e.kind`（比如 401 掉线、404 当已删除）。
 /// 网络错误的统一出口：页面只需要展示 message，不需要认识 DioException。
 enum ApiErrorKind { network, timeout, unauthorized, forbidden, notFound, server, badResponse }
 

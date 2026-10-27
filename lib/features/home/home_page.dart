@@ -1,3 +1,7 @@
+/// 工作台首页：问候 + 今日待办卡 + 模块宫格 + 最近打开。
+///
+/// 所有数字都是实时算的（dashboardProvider），不是写死的。
+library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';

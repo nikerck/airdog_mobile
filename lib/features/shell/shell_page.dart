@@ -1,3 +1,9 @@
+/// 主界面外壳：三个 tab + 启动同步 + 前台轮询。
+///
+/// tab 切换用 PageView 而不是路由，所以：
+/// - 路由表里没有 /me、/album
+/// - 跨页切 tab 用 shellTabProvider（首页头像点一下就走这个）
+library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

@@ -1,3 +1,8 @@
+/// 新建待办弹层：标题、正文、图片（最多 9 张）、可选到期时间。
+///
+/// 到期的四个快捷选项（今天/明天/选日期时间/不设时间）都在这里，
+/// 真正的日期选择在 due_picker.dart。
+library;
 import 'dart:io';
 
 import 'package:flutter/material.dart';

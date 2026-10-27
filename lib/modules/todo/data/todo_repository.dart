@@ -1,3 +1,11 @@
+/// 待办仓库：界面唯一的数据入口。
+///
+/// 读永远读本地（watch），写分两条路：
+/// - 在线（正常）：交给 SyncService，先调接口再把结果写回本地
+/// - 离线（历史遗留，现在走不到）：直接写本地
+///
+/// 这样改数据源（比如以后换成本地优先 + 队列）只需要动这里和 SyncService。
+library;
 import 'package:drift/drift.dart';
 
 import '../../../core/db/app_database.dart';

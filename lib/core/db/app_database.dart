@@ -1,3 +1,16 @@
+/// 本地 SQLite（drift）与表结构注册。
+///
+/// 角色：**服务端数据的本地镜像**，不是权威。界面永远读这里（所以离线也能看），
+/// 写操作由 SyncService 负责把变更同步到服务端。
+///
+/// 所有业务表都带四个同步字段：
+/// - `updatedAt`：服务端生成，增量拉取的依据
+/// - `deletedAt`：软删除（墓碑），否则别的设备不知道「这条被删了」
+/// - `rev`：乐观锁版本，PATCH 时带上，冲突会被拒
+/// - `spaceId`：属于个人空间还是共享空间（生理期永远 personal）
+///
+/// schemaVersion 每次改表都要 +1 并写 migration，见下方 onUpgrade。
+library;
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 

@@ -1,3 +1,7 @@
+/// 相册仓库：选图 → 复制到本地 → 上传拿 fileId → 落本地索引。
+///
+/// 上传失败也照样入库（只是没有 fileId），不会因为断网丢照片。
+library;
 import 'package:drift/drift.dart';
 
 import '../../../core/api/file_api.dart';
@@ -33,6 +37,9 @@ class AlbumRepository {
     final paths = await _store.pick();
     if (paths.isEmpty) return 0;
 
+    // 逐张处理：读尺寸 → 上传 → 落库。
+    // 上传失败不抛异常，只是 fileId 为空（照片照样能在本机看到），
+    // 这样断网选图也不会全丢。
     var added = 0;
     for (final path in paths) {
       final meta = await _store.readMeta(path);

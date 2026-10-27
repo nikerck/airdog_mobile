@@ -1,3 +1,5 @@
+/// 我的：账号与头像、账号安全（改密码）、外观、共享成员、模块管理、退出登录。
+library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';

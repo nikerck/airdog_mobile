@@ -1,3 +1,7 @@
+/// 愿望单主页：总览卡 + 愿望卡片列表 + 新建按钮。
+///
+/// 排序：优先级高的在前，同优先级按创建时间。
+library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -24,6 +28,8 @@ class WishPage extends ConsumerWidget {
     final wishes = ref.watch(wishesProvider).valueOrNull ?? const <Wish>[];
     final byWish = ref.watch(savingsByWishProvider);
 
+    // 顶部总览：把所有愿望的价格和攒钱各自求和。
+    // 百分比按「总已攒 / 总目标」算，不是各愿望百分比的平�均。
     var target = 0;
     var saved = 0;
     for (final w in wishes) {

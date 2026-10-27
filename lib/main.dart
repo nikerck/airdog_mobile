@@ -1,3 +1,13 @@
+/// 应用入口。
+///
+/// 这里只做三件事，按顺序：
+/// 1. 初始化 Flutter 引擎
+/// 2. 读 SharedPreferences（会话、主题、同步游标都存这里）
+/// 3. 用 ProviderScope 注入这两个全局依赖，然后跑 [App]
+///
+/// 为什么在 main 里读会话：登录状态要在第一帧之前就确定，
+/// 否则会先闪一下登录页再跳首页。
+library;
 import 'dart:async';
 
 import 'package:flutter/material.dart';

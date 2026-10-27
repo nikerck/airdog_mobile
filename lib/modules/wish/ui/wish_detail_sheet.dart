@@ -1,3 +1,5 @@
+/// 愿望详情：进度、按人拆分的攒钱、攒钱记录、编辑/删除。
+library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

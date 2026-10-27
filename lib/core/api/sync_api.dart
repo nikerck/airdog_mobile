@@ -1,3 +1,8 @@
+/// 增量同步接口 `/api/sync/changes`。
+///
+/// 一次请求拉齐所有表（含墓碑），客户端按 id upsert。
+/// 游标语义见 docs/同步机制.md。
+library;
 import 'package:dio/dio.dart';
 
 import '../network/api_client.dart';

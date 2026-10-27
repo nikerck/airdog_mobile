@@ -1,3 +1,8 @@
+/// 待办列表页。
+///
+/// 结构：顶部计数 + 三个筛选 chip + 按「今天 / 其他」分组的卡片列表。
+/// 卡片点击进详情；左滑删除（带二次确认，见 confirm_delete.dart）。
+library;
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -5,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_theme.dart';
 import '../../../core/api/api_providers.dart';
+import '../../../shared/widgets/duo_avatar.dart';
 import '../../../core/api/spaces_api.dart';
 import '../../../core/db/app_database.dart';
 import '../../../shared/widgets/fade_slide_in.dart';
@@ -27,14 +33,22 @@ class _TodoPageState extends ConsumerState<TodoPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final muted = AppTheme.muted(context);
     final now = DateTime.now();
     final async = ref.watch(todosProvider);
     final all = async.valueOrNull ?? const <TodoItem>[];
+
+    // 顶部那句「N 项未完成」：不受筛选影响，永远统计全部
     final pending = all.where((t) => t.doneAt == null).length;
+
+    // 先按 chip 过滤，再按「今天 / 其他」分组。两步都是纯函数，
+    // 定义在 domain/todo_filter.dart，有单测覆盖。
     final visible = applyFilter(all, _filter, now);
     final groups = groupByDay(visible, now);
+
+    // 右上角的头像组：谁跟我共享（原来写死成 Z/M，换账号就不对了）
+    final me = ref.watch(meMemberProvider);
+    final partners = ref.watch(partnersProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -44,10 +58,14 @@ class _TodoPageState extends ConsumerState<TodoPage> {
             padding: const EdgeInsets.only(right: 16),
             child: Row(
               children: [
-                _dot(theme, 'Z', theme.colorScheme.primary),
-                Transform.translate(
-                  offset: const Offset(-5, 0),
-                  child: _dot(theme, 'M', const Color(0xFFA6522E)),
+                DuoAvatar(
+                  first: (me?.initial.isNotEmpty ?? false) ? me!.initial : '我',
+                  second: partners.isEmpty
+                      ? null
+                      : (partners.first.initial.isNotEmpty
+                          ? partners.first.initial
+                          : partners.first.name.substring(0, 1)),
+                  extra: partners.length > 1 ? partners.length - 1 : 0,
                 ),
               ],
             ),
@@ -166,23 +184,6 @@ class _TodoPageState extends ConsumerState<TodoPage> {
           const SizedBox(height: 12),
           Text(text, style: TextStyle(fontSize: 13, color: muted)),
         ],
-      ),
-    );
-  }
-
-  Widget _dot(ThemeData theme, String text, Color color) {
-    return Container(
-      width: 20,
-      height: 20,
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.16),
-        shape: BoxShape.circle,
-        border: Border.all(color: theme.cardTheme.color ?? Colors.white, width: 1.6),
-      ),
-      alignment: Alignment.center,
-      child: Text(
-        text,
-        style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: color),
       ),
     );
   }

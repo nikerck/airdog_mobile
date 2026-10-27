@@ -1,3 +1,8 @@
+/// 待办模块的描述（名字、图标、颜色、入口页面）。
+///
+/// 副标题（tagline）这里是静态兜底，首页会用真实数据覆盖，
+/// 见 features/home/dashboard.dart 的 moduleTaglinesProvider。
+library;
 import 'package:flutter/material.dart';
 
 import '../module.dart';

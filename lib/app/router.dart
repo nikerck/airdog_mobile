@@ -1,3 +1,13 @@
+/// 路由表。
+///
+/// 层级约定（重要，别混用）：
+/// - 底部 tab（工作台 / 相册 / 我的）**不是路由**，由 ShellPage 内的 PageView 切换，
+///   跨页跳转用 shellTabProvider。
+/// - 模块页（/todo、/period、/wish）和编辑页（/todo/edit）是真正的路由，用 push。
+///
+/// redirect 负责登录守卫：没有会话一律回 /login；已登录还停在 /login 就送去 /home。
+/// errorBuilder 兜底，任何走错的路径都不会显示原始的 GoException。
+library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';

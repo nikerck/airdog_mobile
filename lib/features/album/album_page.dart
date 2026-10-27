@@ -1,3 +1,8 @@
+/// 相册：按月分组的三列网格。
+///
+/// 现状：照片文件传到服务端，但**索引只在本地**，所以换设备看不到相册
+/// （服务端还没有 /api/photos，见 docs/api 10.7）。
+library;
 import 'dart:io';
 
 import 'package:flutter/material.dart';

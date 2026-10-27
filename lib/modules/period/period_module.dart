@@ -1,3 +1,7 @@
+/// 生理期模块描述。
+///
+/// space = personal：这是隐私数据，永远不进共享空间，服务端也会拒绝写入。
+library;
 import 'package:flutter/material.dart';
 
 import '../module.dart';

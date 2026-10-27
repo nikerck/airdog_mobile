@@ -1,3 +1,8 @@
+/// 依赖装配层：把「会话 → 网络 → 同步 → 数据」串成一张 provider 图。
+///
+/// 文件内有一张 ASCII 依赖图，改动前先看一眼，避免循环依赖。
+/// 原则：上层（页面）只 watch 最末端的 provider，不直接碰 Dio。
+library;
 import 'dart:convert';
 
 import 'package:dio/dio.dart';

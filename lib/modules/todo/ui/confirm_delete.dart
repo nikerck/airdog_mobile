@@ -1,3 +1,5 @@
+/// 删除前的二次确认。抽成公共函数，列表左滑和详情页删除共用。
+library;
 import 'package:flutter/material.dart';
 
 /// 删除前的二次确认，列表左滑和详情页共用。

@@ -1,3 +1,5 @@
+/// 单个圆形头像：有图显示图，没图或加载失败回落成名字首字。
+library;
 import 'package:flutter/material.dart';
 
 /// 圆形头像：有图就显示图，没有就显示首字，加载失败也回落到首字。

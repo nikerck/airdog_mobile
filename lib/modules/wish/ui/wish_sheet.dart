@@ -1,3 +1,5 @@
+/// 新建/编辑愿望的弹层：标题、价格、优先级、链接、备注。
+library;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

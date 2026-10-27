@@ -1,3 +1,9 @@
+/// 根 Widget：主题 + 路由 + 中文本地化。
+///
+/// 物料主题由 [appearanceProvider] 决定（主题色 + 明暗两个维度），
+/// 明暗不跟随系统 —— 这是产品上的决定，手动的。
+/// 路由用 go_router，具体表在 router.dart。
+library;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

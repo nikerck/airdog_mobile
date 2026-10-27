@@ -1,3 +1,8 @@
+/// 空间与成员接口，以及几个处理成员信息的纯函数。
+///
+/// 为什么需要纯函数：成员名字、头像字、共享文案在多个页面用，
+/// 抽成无副作用函数后可以单独写测试（见 test/spaces_test.dart）。
+library;
 import 'package:dio/dio.dart';
 
 import '../network/api_client.dart';

@@ -1,3 +1,5 @@
+/// 小头像组：我 + 第一个伙伴，人再多折叠成「+N」。
+library;
 import 'package:flutter/material.dart';
 
 import '../../app/theme/app_theme.dart';

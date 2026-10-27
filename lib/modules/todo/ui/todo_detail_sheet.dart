@@ -1,3 +1,8 @@
+/// 待办详情弹层。
+///
+/// 只接收 id，内部 watch 数据流 —— 所以编辑保存后，这个弹层会自己刷新，
+/// 不需要关闭重开。
+library;
 import 'dart:io';
 
 import 'package:flutter/material.dart';

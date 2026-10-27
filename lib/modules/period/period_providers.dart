@@ -1,3 +1,8 @@
+/// 经期 provider：仓库、记录流、汇总。
+///
+/// [periodSummaryProvider] 把「原始记录」算成「第几天、下次什么时候、平均周期」，
+/// 算法在 domain/period_calculator.dart，纯函数可测。
+library;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api/api_providers.dart';

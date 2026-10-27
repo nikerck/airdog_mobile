@@ -1,3 +1,8 @@
+/// 把「一次可能失败的操作」包起来：失败时用 SnackBar 显示人话错误。
+///
+/// 所有网络写操作都应该走它，避免每个页面重复 try/catch，
+/// 也避免 DioException 冒到 UI 层。
+library;
 import 'package:flutter/material.dart';
 
 import '../../core/network/api_exception.dart';

@@ -1,3 +1,7 @@
+/// 相册用的本地文件管理：多选、复制、读尺寸、删除。
+///
+/// 和 todo_image_store 的区别：这个支持多选、限制数量、会读宽高用于展示。
+library;
 import 'dart:io';
 import 'dart:ui' as ui;
 

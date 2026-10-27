@@ -1,3 +1,10 @@
+/// 全局网络入口：统一 baseUrl、超时、鉴权头、响应解包、错误翻译。
+///
+/// 两个容易踩的点：
+/// 1. `validateStatus: status < 500` —— 4xx 不会抛 DioException，
+///    所以调用方必须 `ApiClient.unwrap(res)`，否则 401/403/409 会被静默忽略。
+/// 2. 错误统一翻译成 [ApiException]（中文 message），页面直接展示即可。
+library;
 import 'package:dio/dio.dart';
 
 import 'api_exception.dart';

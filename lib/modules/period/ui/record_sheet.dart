@@ -1,3 +1,5 @@
+/// 记录经期的弹层：开始日期、是否结束、流量、症状、备注。
+library;
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_theme.dart';

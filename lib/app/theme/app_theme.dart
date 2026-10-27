@@ -1,3 +1,11 @@
+/// 主题：6 种主题色 × 明暗两套。
+///
+/// 做法是用 seed color 生成 Material 3 配色，再覆盖少量 token
+/// （surface / outline / onSurface），让深色不那么「灰紫」。
+///
+/// 模块自己的强调色不在主题里 —— 生理期、愿望单走各自的 accent，
+/// 不跟主题色变，见 modules/*/[xxx]_module.dart。
+library;
 import 'package:flutter/material.dart';
 
 import 'page_transitions.dart';

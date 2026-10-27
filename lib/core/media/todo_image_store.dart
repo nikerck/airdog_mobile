@@ -1,3 +1,8 @@
+/// 待办图片的本地文件管理：选图、复制进 App 目录、删除。
+///
+/// 为什么不直接用相册路径：系统可能清理缓存 / 用户删图，
+/// 复制到 App 目录后待办才有稳定的本地副本。
+library;
 import 'dart:io';
 
 import 'package:image_picker/image_picker.dart';

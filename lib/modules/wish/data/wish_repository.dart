@@ -1,3 +1,5 @@
+/// 愿望仓库：在线走 SyncService，离线直接写本地（历史遗留路径）。
+library;
 import 'package:drift/drift.dart';
 
 import '../../../core/db/app_database.dart';

@@ -1,3 +1,8 @@
+/// 待办的分组、筛选、文案这些纯函数。
+///
+/// 抽出来是为了能单测（test/todo_filter_test.dart），也方便以后做排序偏好。
+/// 页面只负责渲染，不做日期计算。
+library;
 import '../../../core/db/app_database.dart';
 
 enum TodoFilter { all, today, done }

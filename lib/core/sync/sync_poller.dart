@@ -1,3 +1,7 @@
+/// 前台轮询器：App 在前台时每 30 秒拉一次增量。
+///
+/// 只负责「什么时候拉」，真正拉数据的是 SyncService.pullAll()。
+library;
 import 'dart:async';
 
 import 'package:flutter/widgets.dart';

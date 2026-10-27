@@ -1,3 +1,5 @@
+/// 全屏看图：左右滑、双指缩放、底部改说明、右上角删除。
+library;
 import 'dart:io';
 
 import 'package:flutter/material.dart';

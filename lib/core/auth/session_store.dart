@@ -1,3 +1,8 @@
+/// 会话的持久化：token 走安全存储，其余走 SharedPreferences。
+///
+/// 为什么分开：token 泄漏等于账号被盗，不该和「上次选的服务器地址」放同一个文件。
+/// 读取失败时返回 null（当未登录处理），不让损坏的数据把 App 卡死。
+library;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';

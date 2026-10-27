@@ -1,3 +1,8 @@
+/// 周期计算（纯函数）。
+///
+/// 输入原始记录 + 今天，输出：本周期第几天、下次预计、平均周期、平均经期长度、是否经期中。
+/// 规则都写在 summarizePeriod 的注释里；边界情况见 test/period_calculator_test.dart。
+library;
 import '../../../core/db/app_database.dart';
 
 /// 一次周期汇总：页面上那三个数字 + 日历高亮都从这里出。

@@ -1,3 +1,8 @@
+/// 登录会话：服务器地址 + token + 用户信息。
+///
+/// 这是不可变对象，改字段用 copyWith。token 单独存安全存储（见 session_store），
+/// 其余字段存在 SharedPreferences。
+library;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// 一次登录会话。离线模式下 token 为空。

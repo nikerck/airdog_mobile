@@ -1,3 +1,8 @@
+/// 同步核心：服务端权威，本地 drift 只是镜像。
+///
+/// 三条链路（拉 / 写 / 图片）和冲突策略都在类注释里写清楚了，
+/// 第一次看这块代码建议先读 docs/同步机制.md。
+library;
 import 'dart:io';
 
 import 'package:drift/drift.dart';

@@ -1,3 +1,8 @@
+/// 认证相关的接口封装：登录、登出、设置头像、改密码。
+///
+/// 约定：4xx 不会抛 DioException（见 api_client 的 validateStatus），
+/// 所以每个方法都必须调 ApiClient.unwrap(res)，否则失败会被当成成功。
+library;
 import 'package:dio/dio.dart';
 
 import '../network/api_client.dart';

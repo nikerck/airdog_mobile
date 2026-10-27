@@ -1,3 +1,8 @@
+/// 文件（图片）接口：上传、下载、删除。
+///
+/// 后端按 sha256 去重，同一张图重复上传返回同一个 id，
+/// 所以客户端可以放心地「每次都传」，不用自己算哈希。
+library;
 import 'dart:io';
 
 import 'package:dio/dio.dart';

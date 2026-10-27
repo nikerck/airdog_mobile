@@ -1,3 +1,8 @@
+/// 首页的派生数据：今日统计、模块副标题、最近打开。
+///
+/// 这些都是 Provider：输入是 todosProvider，输出是页面直接用的结构，
+/// 数据一变首页自动重算。
+library;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/db/app_database.dart';
@@ -27,10 +32,13 @@ class DashboardSummary {
 final dashboardProvider = Provider<DashboardSummary>((ref) {
   final now = DateTime.now();
   final todos = ref.watch(todosProvider).valueOrNull ?? const <TodoItem>[];
+  // 今日卡只算「到期时间在今天」的，未设日期的待办不进这张卡
+  // （不然「今天」会变成「全部未完成」，失去意义）
   final today = todos
       .where((t) => t.dueAt != null && isSameDay(t.dueAt!, now))
       .toList();
   final done = today.where((t) => t.doneAt != null).length;
+  // 「下一项」= 今天还没完成里，到期时间最早的那个
   final pending = today.where((t) => t.doneAt == null).toList()
     ..sort((a, b) => a.dueAt!.compareTo(b.dueAt!));
   final next = pending.isEmpty ? null : pending.first;

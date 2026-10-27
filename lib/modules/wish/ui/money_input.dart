@@ -1,3 +1,8 @@
+/// 输入金额的弹层（攒一笔）。
+///
+/// 用底部弹层而不是 AlertDialog：带输入框的对话框在安卓上会被键盘挤扁，
+/// 「确定」看不见（密码弹层踩过同样的坑）。
+library;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

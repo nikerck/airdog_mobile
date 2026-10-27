@@ -1,3 +1,7 @@
+/// 愿望 + 攒钱记录接口。
+///
+/// 金额都是整数「分」。攒钱允许负数（撤回），所以后端不做非负校验。
+library;
 import 'package:dio/dio.dart';
 
 import '../network/api_client.dart';

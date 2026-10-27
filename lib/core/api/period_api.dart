@@ -1,3 +1,8 @@
+/// 经期记录接口。
+///
+/// 服务端强制写入个人空间，所以这里不带 spaceId 参数
+/// （传共享空间会被 403 拒绝，客户端也不该有那个入口）。
+library;
 import 'package:dio/dio.dart';
 
 import '../network/api_client.dart';

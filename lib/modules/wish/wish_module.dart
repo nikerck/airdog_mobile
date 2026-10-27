@@ -1,3 +1,5 @@
+/// 愿望单模块描述。space = shared，和对方一起攒钱。
+library;
 import 'package:flutter/material.dart';
 
 import 'ui/wish_page.dart';

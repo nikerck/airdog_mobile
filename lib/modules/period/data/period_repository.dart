@@ -1,3 +1,7 @@
+/// 经期仓库：写操作走 SyncService，读走本地流。
+///
+/// 服务端强制个人空间，所以这里的 spaceId 写死 personal。
+library;
 import 'package:drift/drift.dart';
 
 import '../../../core/db/app_database.dart';

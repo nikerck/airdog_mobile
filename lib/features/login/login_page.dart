@@ -1,3 +1,7 @@
+/// 登录页：服务器地址 + 账号 + 密码。
+///
+/// 地址不预填（每个人服务器不一样），下面给两个快捷填充：模拟器 / USB 真机。
+library;
 import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';

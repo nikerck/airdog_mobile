@@ -1,3 +1,8 @@
+/// 生理期主页：自绘月历 + 统计卡 + 最近周期。
+///
+/// 日历没用第三方库：需要同时表达「已记录（实心）/ 今天（描边）/ 预测（虚线圈）」
+/// 三种状态，现成组件的样式钩子不够细。
+library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

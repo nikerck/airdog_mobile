@@ -1,3 +1,8 @@
+/// 模块注册表：唯一的「模块清单」。
+///
+/// 加模块只改这里一行；顺序由 module.order 决定，首页宫格据此排序。
+/// 路由表也由这个列表生成（见 app/router.dart），不用手动加 GoRoute。
+library;
 import 'package:flutter/material.dart';
 
 import 'module.dart';

@@ -1,3 +1,7 @@
+/// 外观设置：主题色（6 选 1）+ 明暗（light/dark），都存在 SharedPreferences。
+///
+/// 不跟随系统，产品上要求手动控制；启动时读一次，之后由 UI 修改。
+library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';

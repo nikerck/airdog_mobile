@@ -1,3 +1,11 @@
+/// 登录状态机（Riverpod Notifier）。
+///
+/// 对外只有三个动作：signIn / signOut / 以及 state 变化。
+/// state 是 null 表示未登录，restore 完成前 router 会等它。
+///
+/// 注意：登录失败不抛异常，而是返回一句可展示的中文错误，
+/// 页面直接显示即可（异常留给「网络/数据」层）。
+library;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../network/api_client.dart';
