@@ -7,6 +7,15 @@ import '../../../core/sync/sync_service.dart';
 ///
 /// 现在是纯本地：UI → Repository → drift。
 /// 接后端时在这里加 RemoteDataSource，UI 不用动。
+/// 待办仓库：界面只认它，不关心数据从哪来。
+///
+/// 有两条路径：
+/// - **[sync] 不为 null（正常情况）**：写操作全部交给 [SyncService]，
+///   走「接口成功 → 回写本地」，本地只当缓存。
+/// - **[sync] 为 null**：直接写本地 drift。这条路是早期离线模式留下的，
+///   现在登录后才能进主界面，实际上走不到，保留是为了不改动大量调用方。
+///
+/// 读永远只读本地（[watch]），所以列表、首页统计这些不需要关心网络。
 class TodoRepository {
   TodoRepository(this._db, {this.sync});
 

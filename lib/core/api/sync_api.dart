@@ -4,6 +4,12 @@ import '../network/api_client.dart';
 import 'dto.dart';
 
 /// 增量同步：一次拉齐所有表（含墓碑）。
+///
+/// 服务端约定（docs/api/接口约定.md 第 8 节）：
+/// - 返回 `updatedAt > since` 的所有行，按 updatedAt 升序
+/// - 墓碑行也会返回（deletedAt 有值），否则客户端删不掉东西
+/// - `hasMore=false` 时 `serverTime` 就是下次的游标
+/// - `hasMore=true` 时用 `nextSince` 接着拉，一页最多 limit 条
 class SyncApi {
   SyncApi(this._dio);
 

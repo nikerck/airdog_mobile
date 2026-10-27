@@ -9,9 +9,34 @@ import '../db/app_database.dart';
 import '../db/db_provider.dart';
 import '../network/api_client.dart';
 import '../settings/appearance.dart';
+import '../sync/sync_poller.dart';
 import '../sync/sync_service.dart';
 import 'media_url.dart';
 import 'spaces_api.dart';
+
+/// 这一层把「会话 → 网络 → 数据」串起来，页面只 watch 最终的数据流。
+///
+/// 依赖关系（箭头 = 谁依赖谁）：
+///
+/// ```
+/// authProvider（登录状态：baseUrl + token + userId）
+///      │
+///      ├─► apiDioProvider         在线才有 Dio；离线/未登录是 null
+///      │        │
+///      │        ├─► syncServiceProvider   拉取 + 写穿
+///      │        │        └─► startupSyncProvider   冷启动拉一次
+///      │        │        └─► syncPollerProvider    前台每 30 秒拉一次
+///      │        │
+///      │        └─► spacesProvider   空间与成员（带 prefs 缓存）
+///      │                 ├─► membersByIdProvider  id → 成员
+///      │                 ├─► meMemberProvider     我自己
+///      │                 └─► partnersProvider     共享给我的人
+///      │
+///      └─► currentUserIdProvider   改数据时写 doneBy / memberId 用
+/// ```
+///
+/// 为什么要分层：登录/登出会让 [apiDioProvider] 变成 null 或重建，
+/// 下面所有依赖它的 provider 会自动跟着重建，不需要手动清理状态。
 
 /// 在线时才有 Dio；离线模式下为 null，仓库会走纯本地。
 final apiDioProvider = Provider<Dio?>((ref) {
@@ -30,6 +55,22 @@ final syncServiceProvider = Provider<SyncService?>((ref) {
     prefs: ref.watch(sharedPreferencesProvider),
     meId: session?.userId ?? Members.me,
   );
+});
+
+/// 前台轮询器：App 在前台时每 30 秒拉一次增量。
+///
+/// 它依赖 [syncServiceProvider]：退出登录后 provider 重建，旧的轮询器
+/// 会通过 onDispose 自动停掉。
+final syncPollerProvider = Provider<SyncPoller>((ref) {
+  final sync = ref.watch(syncServiceProvider);
+  final poller = SyncPoller(
+    pull: () async {
+      if (sync == null) return 0;
+      return sync.pullAll();
+    },
+  );
+  ref.onDispose(poller.stop);
+  return poller;
 });
 
 /// 登录后触发一次增量拉取；离线或失败时为 0 / 抛错。

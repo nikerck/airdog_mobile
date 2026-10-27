@@ -15,11 +15,29 @@ import '../api/wish_api.dart';
 import '../db/app_database.dart';
 import '../network/api_exception.dart';
 
-/// 在线模式下的读写入口：服务端是权威，drift 只是本地镜像。
+/// 在线模式下的读写入口：**服务端是权威，drift 只是本地镜像**。
 ///
-/// - 拉：`/api/sync/changes` 增量同步，按 id upsert，墓碑行进 deletedAt。
-/// - 写：先调接口，成功了再把服务端返回的对象写回本地。
-/// - 图片：本地路径 ↔ fileId 通过 file_cache 表映射。
+/// 为什么这么设计：
+/// 两个人共用一份数据，冲突不可避免。与其在两端各写一套合并逻辑，
+/// 不如把「谁说了算」定死：服务端。客户端所有写操作都是「先请示，再更新本地」，
+/// 本地只负责让界面能立刻响应（离线读、滚动不卡）。
+///
+/// 三条链路：
+///
+/// 1. **拉**（[_pullOnce]）：`/api/sync/changes?since=游标`，
+///    服务端返回 `updatedAt > since` 的所有行（含墓碑），按 id `insertOnConflictUpdate`。
+///    游标存在 SharedPreferences 的 `sync.since`，取的是服务端的 `serverTime`。
+///
+/// 2. **写**（create/update/toggle/delete）：先调接口拿返回的完整对象，
+///    再把返回对象 upsert 进本地。接口失败就抛 [ApiException]，本地保持原样 —— 
+///    这样不会出现「界面上改了但服务端没改」的假同步。
+///
+/// 3. **图片**：图片文件不进 JSON。先 `POST /api/files` 拿 `fileId`，
+///    待办只存 id 列表；本地 `file_cache` 表维护 `fileId ↔ 本地路径`，
+///    拉取时缺哪张图就按 id 下载一份。
+///
+/// 冲突策略：`rev` 乐观锁。服务端发现版本旧了返回 409/2003，
+/// 客户端先补一次全量（[pullAll]）让本地变成最新，再提示用户重试 —— 即「后写覆盖」。
 class SyncService {
   SyncService({
     required this.db,
@@ -48,7 +66,23 @@ class SyncService {
 
   // ---------------------------------------------------------------- 拉
 
-  Future<int> pullAll() async {
+  /// 正在进行的拉取。启动同步、30 秒轮询、409 冲突补拉可能撞在一起，
+  /// 这里让它们共用同一次请求，避免重复打接口、重复写库。
+  Future<int>? _pulling;
+
+  /// 拉增量。可以随便并发调，内部会合并。
+  Future<int> pullAll() {
+    final running = _pulling;
+    if (running != null) return running;
+
+    final future = _pullOnce();
+    _pulling = future;
+    return future.whenComplete(() {
+      if (identical(_pulling, future)) _pulling = null;
+    });
+  }
+
+  Future<int> _pullOnce() async {
     var since = cursor;
 
     // 本地被清空（重装/换机/异常）但游标还在的话，增量永远拉不到东西，
@@ -100,6 +134,9 @@ class SyncService {
 
   // ---------------------------------------------------------------- 待办（写）
 
+  /// 新建待办：先传图 → 创建 → 用服务端返回的对象回写本地。
+  ///
+  /// 图片必须排在前面：服务端只接受 fileId，不认本地路径。
   Future<void> createTodo({
     required String title,
     String content = '',
@@ -118,6 +155,10 @@ class SyncService {
     await upsertTodo(dto, localPaths: localImages);
   }
 
+  /// 修改待办。`images` 传的是本地路径列表，方法内部会换成 fileId。
+  ///
+  /// 注意 `dueAt: null` 在 PATCH 里表示「清除到期时间」，
+  /// 所以这里直接把 null 传下去，不能省略字段。
   Future<void> updateTodo(
     TodoItem item, {
     required String title,
@@ -136,6 +177,7 @@ class SyncService {
     await upsertTodo(dto, localPaths: localImages);
   }
 
+  /// 勾选/取消完成。只有这个操作允许非创建人做，所以单独一个方法。
   Future<void> toggleTodo(TodoItem item) async {
     final done = item.doneAt == null;
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -147,6 +189,8 @@ class SyncService {
     await upsertTodo(dto);
   }
 
+  /// 删除待办。服务端删成功后本地做软删（置 deletedAt），
+  /// 这样界面立刻消失，但墓碑行还留着，下次同步能和服务端对上。
   Future<void> deleteTodo(TodoItem item) async {
     try {
       await _todoApi.delete(item.id);
@@ -286,6 +330,10 @@ class SyncService {
 
   // ---------------------------------------------------------------- 映射
 
+  /// 把服务端的一条待办写进本地。
+  ///
+  /// [localPaths] 是「刚创建/刚编辑」时已知的本地图片路径，传了就不需要再下载；
+  /// 从服务端拉取时不传，会按 fileId 去找缓存或下载。
   Future<void> upsertTodo(TodoDto dto, {List<String>? localPaths}) async {
     final idList = dto.images;
     final paths = localPaths ?? await resolveImages(idList);
@@ -394,7 +442,11 @@ class SyncService {
     return ids;
   }
 
-  /// fileId → 本地路径；没有缓存就下载一份。
+  /// fileId → 本地路径。
+  ///
+  /// 顺序：先查 file_cache → 文件还在就直接用；否则按 id 下载到
+  /// `<App目录>/todo_images/srv_<fileId>` 并写回缓存。
+  /// 下载失败只是少一张图，绝不能因此丢掉整条待办，所以这里吞掉异常。
   Future<List<String>> resolveImages(List<String> fileIds) async {
     final paths = <String>[];
     for (final id in fileIds) {

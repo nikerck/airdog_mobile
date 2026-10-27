@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api/api_providers.dart';
+import '../../core/sync/sync_poller.dart';
 
 import '../../features/album/album_page.dart';
 import '../../features/home/home_page.dart';
@@ -18,6 +19,18 @@ class ShellPage extends ConsumerStatefulWidget {
 
 class _ShellPageState extends ConsumerState<ShellPage> {
   int _index = 0;
+
+  /// 前台轮询器，见 sync_poller.dart
+  late final SyncPoller _poller;
+
+  @override
+  void initState() {
+    super.initState();
+    // 进入主界面才开始轮询；退出登录（ShellPage 销毁）就停掉
+    _poller = ref.read(syncPollerProvider);
+    _poller.start();
+  }
+
   late final PageController _controller = PageController(initialPage: _index);
 
   static const _pages = <Widget>[
@@ -28,6 +41,7 @@ class _ShellPageState extends ConsumerState<ShellPage> {
 
   @override
   void dispose() {
+    _poller.stop();
     _controller.dispose();
     super.dispose();
   }
@@ -46,6 +60,8 @@ class _ShellPageState extends ConsumerState<ShellPage> {
 
   @override
   Widget build(BuildContext context) {
+    // 冷启动/登录后拉一次全量增量。只有这一次会弹错误提示，
+    // 后续的 30 秒轮询失败是静默的。
     ref.listen(startupSyncProvider, (previous, next) {
       if (next.hasError) {
         ScaffoldMessenger.of(context).showSnackBar(
