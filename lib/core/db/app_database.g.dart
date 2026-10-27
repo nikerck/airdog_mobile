@@ -2997,6 +2997,18 @@ class $PhotosTable extends Photos with TableInfo<$PhotosTable, Photo> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _spaceIdMeta = const VerificationMeta(
+    'spaceId',
+  );
+  @override
+  late final GeneratedColumn<String> spaceId = GeneratedColumn<String>(
+    'space_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('sp_shared'),
+  );
   static const VerificationMeta _fileIdMeta = const VerificationMeta('fileId');
   @override
   late final GeneratedColumn<String> fileId = GeneratedColumn<String>(
@@ -3071,6 +3083,18 @@ class $PhotosTable extends Photos with TableInfo<$PhotosTable, Photo> {
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _createdByMeta = const VerificationMeta(
+    'createdBy',
+  );
+  @override
+  late final GeneratedColumn<String> createdBy = GeneratedColumn<String>(
+    'created_by',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('u_me'),
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -3117,6 +3141,7 @@ class $PhotosTable extends Photos with TableInfo<$PhotosTable, Photo> {
   @override
   List<GeneratedColumn> get $columns => [
     id,
+    spaceId,
     fileId,
     path,
     caption,
@@ -3124,6 +3149,7 @@ class $PhotosTable extends Photos with TableInfo<$PhotosTable, Photo> {
     width,
     height,
     sizeBytes,
+    createdBy,
     createdAt,
     updatedAt,
     deletedAt,
@@ -3145,6 +3171,12 @@ class $PhotosTable extends Photos with TableInfo<$PhotosTable, Photo> {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     } else if (isInserting) {
       context.missing(_idMeta);
+    }
+    if (data.containsKey('space_id')) {
+      context.handle(
+        _spaceIdMeta,
+        spaceId.isAcceptableOrUnknown(data['space_id']!, _spaceIdMeta),
+      );
     }
     if (data.containsKey('file_id')) {
       context.handle(
@@ -3192,6 +3224,12 @@ class $PhotosTable extends Photos with TableInfo<$PhotosTable, Photo> {
         sizeBytes.isAcceptableOrUnknown(data['size_bytes']!, _sizeBytesMeta),
       );
     }
+    if (data.containsKey('created_by')) {
+      context.handle(
+        _createdByMeta,
+        createdBy.isAcceptableOrUnknown(data['created_by']!, _createdByMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -3233,6 +3271,10 @@ class $PhotosTable extends Photos with TableInfo<$PhotosTable, Photo> {
         DriftSqlType.string,
         data['${effectivePrefix}id'],
       )!,
+      spaceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}space_id'],
+      )!,
       fileId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}file_id'],
@@ -3260,6 +3302,10 @@ class $PhotosTable extends Photos with TableInfo<$PhotosTable, Photo> {
       sizeBytes: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}size_bytes'],
+      )!,
+      createdBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_by'],
       )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
@@ -3289,22 +3335,27 @@ class $PhotosTable extends Photos with TableInfo<$PhotosTable, Photo> {
 class Photo extends DataClass implements Insertable<Photo> {
   final String id;
 
+  /// 属于哪个空间（目前固定共享空间）
+  final String spaceId;
+
   /// 服务端文件 id；离线添加时为空
   final String fileId;
 
-  /// 本地副本，渲染用
+  /// 本地副本，渲染用（换设备后由下载补上）
   final String path;
   final String caption;
   final DateTime takenAt;
   final int width;
   final int height;
   final int sizeBytes;
+  final String createdBy;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
   final int rev;
   const Photo({
     required this.id,
+    required this.spaceId,
     required this.fileId,
     required this.path,
     required this.caption,
@@ -3312,6 +3363,7 @@ class Photo extends DataClass implements Insertable<Photo> {
     required this.width,
     required this.height,
     required this.sizeBytes,
+    required this.createdBy,
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
@@ -3321,6 +3373,7 @@ class Photo extends DataClass implements Insertable<Photo> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
+    map['space_id'] = Variable<String>(spaceId);
     map['file_id'] = Variable<String>(fileId);
     map['path'] = Variable<String>(path);
     map['caption'] = Variable<String>(caption);
@@ -3328,6 +3381,7 @@ class Photo extends DataClass implements Insertable<Photo> {
     map['width'] = Variable<int>(width);
     map['height'] = Variable<int>(height);
     map['size_bytes'] = Variable<int>(sizeBytes);
+    map['created_by'] = Variable<String>(createdBy);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     if (!nullToAbsent || deletedAt != null) {
@@ -3340,6 +3394,7 @@ class Photo extends DataClass implements Insertable<Photo> {
   PhotosCompanion toCompanion(bool nullToAbsent) {
     return PhotosCompanion(
       id: Value(id),
+      spaceId: Value(spaceId),
       fileId: Value(fileId),
       path: Value(path),
       caption: Value(caption),
@@ -3347,6 +3402,7 @@ class Photo extends DataClass implements Insertable<Photo> {
       width: Value(width),
       height: Value(height),
       sizeBytes: Value(sizeBytes),
+      createdBy: Value(createdBy),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
@@ -3363,6 +3419,7 @@ class Photo extends DataClass implements Insertable<Photo> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Photo(
       id: serializer.fromJson<String>(json['id']),
+      spaceId: serializer.fromJson<String>(json['spaceId']),
       fileId: serializer.fromJson<String>(json['fileId']),
       path: serializer.fromJson<String>(json['path']),
       caption: serializer.fromJson<String>(json['caption']),
@@ -3370,6 +3427,7 @@ class Photo extends DataClass implements Insertable<Photo> {
       width: serializer.fromJson<int>(json['width']),
       height: serializer.fromJson<int>(json['height']),
       sizeBytes: serializer.fromJson<int>(json['sizeBytes']),
+      createdBy: serializer.fromJson<String>(json['createdBy']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
@@ -3381,6 +3439,7 @@ class Photo extends DataClass implements Insertable<Photo> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
+      'spaceId': serializer.toJson<String>(spaceId),
       'fileId': serializer.toJson<String>(fileId),
       'path': serializer.toJson<String>(path),
       'caption': serializer.toJson<String>(caption),
@@ -3388,6 +3447,7 @@ class Photo extends DataClass implements Insertable<Photo> {
       'width': serializer.toJson<int>(width),
       'height': serializer.toJson<int>(height),
       'sizeBytes': serializer.toJson<int>(sizeBytes),
+      'createdBy': serializer.toJson<String>(createdBy),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
@@ -3397,6 +3457,7 @@ class Photo extends DataClass implements Insertable<Photo> {
 
   Photo copyWith({
     String? id,
+    String? spaceId,
     String? fileId,
     String? path,
     String? caption,
@@ -3404,12 +3465,14 @@ class Photo extends DataClass implements Insertable<Photo> {
     int? width,
     int? height,
     int? sizeBytes,
+    String? createdBy,
     DateTime? createdAt,
     DateTime? updatedAt,
     Value<DateTime?> deletedAt = const Value.absent(),
     int? rev,
   }) => Photo(
     id: id ?? this.id,
+    spaceId: spaceId ?? this.spaceId,
     fileId: fileId ?? this.fileId,
     path: path ?? this.path,
     caption: caption ?? this.caption,
@@ -3417,6 +3480,7 @@ class Photo extends DataClass implements Insertable<Photo> {
     width: width ?? this.width,
     height: height ?? this.height,
     sizeBytes: sizeBytes ?? this.sizeBytes,
+    createdBy: createdBy ?? this.createdBy,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -3425,6 +3489,7 @@ class Photo extends DataClass implements Insertable<Photo> {
   Photo copyWithCompanion(PhotosCompanion data) {
     return Photo(
       id: data.id.present ? data.id.value : this.id,
+      spaceId: data.spaceId.present ? data.spaceId.value : this.spaceId,
       fileId: data.fileId.present ? data.fileId.value : this.fileId,
       path: data.path.present ? data.path.value : this.path,
       caption: data.caption.present ? data.caption.value : this.caption,
@@ -3432,6 +3497,7 @@ class Photo extends DataClass implements Insertable<Photo> {
       width: data.width.present ? data.width.value : this.width,
       height: data.height.present ? data.height.value : this.height,
       sizeBytes: data.sizeBytes.present ? data.sizeBytes.value : this.sizeBytes,
+      createdBy: data.createdBy.present ? data.createdBy.value : this.createdBy,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -3443,6 +3509,7 @@ class Photo extends DataClass implements Insertable<Photo> {
   String toString() {
     return (StringBuffer('Photo(')
           ..write('id: $id, ')
+          ..write('spaceId: $spaceId, ')
           ..write('fileId: $fileId, ')
           ..write('path: $path, ')
           ..write('caption: $caption, ')
@@ -3450,6 +3517,7 @@ class Photo extends DataClass implements Insertable<Photo> {
           ..write('width: $width, ')
           ..write('height: $height, ')
           ..write('sizeBytes: $sizeBytes, ')
+          ..write('createdBy: $createdBy, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -3461,6 +3529,7 @@ class Photo extends DataClass implements Insertable<Photo> {
   @override
   int get hashCode => Object.hash(
     id,
+    spaceId,
     fileId,
     path,
     caption,
@@ -3468,6 +3537,7 @@ class Photo extends DataClass implements Insertable<Photo> {
     width,
     height,
     sizeBytes,
+    createdBy,
     createdAt,
     updatedAt,
     deletedAt,
@@ -3478,6 +3548,7 @@ class Photo extends DataClass implements Insertable<Photo> {
       identical(this, other) ||
       (other is Photo &&
           other.id == this.id &&
+          other.spaceId == this.spaceId &&
           other.fileId == this.fileId &&
           other.path == this.path &&
           other.caption == this.caption &&
@@ -3485,6 +3556,7 @@ class Photo extends DataClass implements Insertable<Photo> {
           other.width == this.width &&
           other.height == this.height &&
           other.sizeBytes == this.sizeBytes &&
+          other.createdBy == this.createdBy &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
@@ -3493,6 +3565,7 @@ class Photo extends DataClass implements Insertable<Photo> {
 
 class PhotosCompanion extends UpdateCompanion<Photo> {
   final Value<String> id;
+  final Value<String> spaceId;
   final Value<String> fileId;
   final Value<String> path;
   final Value<String> caption;
@@ -3500,6 +3573,7 @@ class PhotosCompanion extends UpdateCompanion<Photo> {
   final Value<int> width;
   final Value<int> height;
   final Value<int> sizeBytes;
+  final Value<String> createdBy;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
@@ -3507,6 +3581,7 @@ class PhotosCompanion extends UpdateCompanion<Photo> {
   final Value<int> rowid;
   const PhotosCompanion({
     this.id = const Value.absent(),
+    this.spaceId = const Value.absent(),
     this.fileId = const Value.absent(),
     this.path = const Value.absent(),
     this.caption = const Value.absent(),
@@ -3514,6 +3589,7 @@ class PhotosCompanion extends UpdateCompanion<Photo> {
     this.width = const Value.absent(),
     this.height = const Value.absent(),
     this.sizeBytes = const Value.absent(),
+    this.createdBy = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -3522,6 +3598,7 @@ class PhotosCompanion extends UpdateCompanion<Photo> {
   });
   PhotosCompanion.insert({
     required String id,
+    this.spaceId = const Value.absent(),
     this.fileId = const Value.absent(),
     required String path,
     this.caption = const Value.absent(),
@@ -3529,6 +3606,7 @@ class PhotosCompanion extends UpdateCompanion<Photo> {
     this.width = const Value.absent(),
     this.height = const Value.absent(),
     this.sizeBytes = const Value.absent(),
+    this.createdBy = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.deletedAt = const Value.absent(),
@@ -3541,6 +3619,7 @@ class PhotosCompanion extends UpdateCompanion<Photo> {
        updatedAt = Value(updatedAt);
   static Insertable<Photo> custom({
     Expression<String>? id,
+    Expression<String>? spaceId,
     Expression<String>? fileId,
     Expression<String>? path,
     Expression<String>? caption,
@@ -3548,6 +3627,7 @@ class PhotosCompanion extends UpdateCompanion<Photo> {
     Expression<int>? width,
     Expression<int>? height,
     Expression<int>? sizeBytes,
+    Expression<String>? createdBy,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
@@ -3556,6 +3636,7 @@ class PhotosCompanion extends UpdateCompanion<Photo> {
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
+      if (spaceId != null) 'space_id': spaceId,
       if (fileId != null) 'file_id': fileId,
       if (path != null) 'path': path,
       if (caption != null) 'caption': caption,
@@ -3563,6 +3644,7 @@ class PhotosCompanion extends UpdateCompanion<Photo> {
       if (width != null) 'width': width,
       if (height != null) 'height': height,
       if (sizeBytes != null) 'size_bytes': sizeBytes,
+      if (createdBy != null) 'created_by': createdBy,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -3573,6 +3655,7 @@ class PhotosCompanion extends UpdateCompanion<Photo> {
 
   PhotosCompanion copyWith({
     Value<String>? id,
+    Value<String>? spaceId,
     Value<String>? fileId,
     Value<String>? path,
     Value<String>? caption,
@@ -3580,6 +3663,7 @@ class PhotosCompanion extends UpdateCompanion<Photo> {
     Value<int>? width,
     Value<int>? height,
     Value<int>? sizeBytes,
+    Value<String>? createdBy,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<DateTime?>? deletedAt,
@@ -3588,6 +3672,7 @@ class PhotosCompanion extends UpdateCompanion<Photo> {
   }) {
     return PhotosCompanion(
       id: id ?? this.id,
+      spaceId: spaceId ?? this.spaceId,
       fileId: fileId ?? this.fileId,
       path: path ?? this.path,
       caption: caption ?? this.caption,
@@ -3595,6 +3680,7 @@ class PhotosCompanion extends UpdateCompanion<Photo> {
       width: width ?? this.width,
       height: height ?? this.height,
       sizeBytes: sizeBytes ?? this.sizeBytes,
+      createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -3608,6 +3694,9 @@ class PhotosCompanion extends UpdateCompanion<Photo> {
     final map = <String, Expression>{};
     if (id.present) {
       map['id'] = Variable<String>(id.value);
+    }
+    if (spaceId.present) {
+      map['space_id'] = Variable<String>(spaceId.value);
     }
     if (fileId.present) {
       map['file_id'] = Variable<String>(fileId.value);
@@ -3629,6 +3718,9 @@ class PhotosCompanion extends UpdateCompanion<Photo> {
     }
     if (sizeBytes.present) {
       map['size_bytes'] = Variable<int>(sizeBytes.value);
+    }
+    if (createdBy.present) {
+      map['created_by'] = Variable<String>(createdBy.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
@@ -3652,6 +3744,7 @@ class PhotosCompanion extends UpdateCompanion<Photo> {
   String toString() {
     return (StringBuffer('PhotosCompanion(')
           ..write('id: $id, ')
+          ..write('spaceId: $spaceId, ')
           ..write('fileId: $fileId, ')
           ..write('path: $path, ')
           ..write('caption: $caption, ')
@@ -3659,6 +3752,7 @@ class PhotosCompanion extends UpdateCompanion<Photo> {
           ..write('width: $width, ')
           ..write('height: $height, ')
           ..write('sizeBytes: $sizeBytes, ')
+          ..write('createdBy: $createdBy, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -5155,6 +5249,7 @@ typedef $$WishSavingsTableProcessedTableManager =
 typedef $$PhotosTableCreateCompanionBuilder =
     PhotosCompanion Function({
       required String id,
+      Value<String> spaceId,
       Value<String> fileId,
       required String path,
       Value<String> caption,
@@ -5162,6 +5257,7 @@ typedef $$PhotosTableCreateCompanionBuilder =
       Value<int> width,
       Value<int> height,
       Value<int> sizeBytes,
+      Value<String> createdBy,
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<DateTime?> deletedAt,
@@ -5171,6 +5267,7 @@ typedef $$PhotosTableCreateCompanionBuilder =
 typedef $$PhotosTableUpdateCompanionBuilder =
     PhotosCompanion Function({
       Value<String> id,
+      Value<String> spaceId,
       Value<String> fileId,
       Value<String> path,
       Value<String> caption,
@@ -5178,6 +5275,7 @@ typedef $$PhotosTableUpdateCompanionBuilder =
       Value<int> width,
       Value<int> height,
       Value<int> sizeBytes,
+      Value<String> createdBy,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
@@ -5196,6 +5294,11 @@ class $$PhotosTableFilterComposer
   });
   ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get spaceId => $composableBuilder(
+    column: $table.spaceId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5234,6 +5337,11 @@ class $$PhotosTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get createdBy => $composableBuilder(
+    column: $table.createdBy,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnFilters(column),
@@ -5266,6 +5374,11 @@ class $$PhotosTableOrderingComposer
   });
   ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get spaceId => $composableBuilder(
+    column: $table.spaceId,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -5304,6 +5417,11 @@ class $$PhotosTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get createdBy => $composableBuilder(
+    column: $table.createdBy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -5337,6 +5455,9 @@ class $$PhotosTableAnnotationComposer
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
+  GeneratedColumn<String> get spaceId =>
+      $composableBuilder(column: $table.spaceId, builder: (column) => column);
+
   GeneratedColumn<String> get fileId =>
       $composableBuilder(column: $table.fileId, builder: (column) => column);
 
@@ -5357,6 +5478,9 @@ class $$PhotosTableAnnotationComposer
 
   GeneratedColumn<int> get sizeBytes =>
       $composableBuilder(column: $table.sizeBytes, builder: (column) => column);
+
+  GeneratedColumn<String> get createdBy =>
+      $composableBuilder(column: $table.createdBy, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -5400,6 +5524,7 @@ class $$PhotosTableTableManager
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
+                Value<String> spaceId = const Value.absent(),
                 Value<String> fileId = const Value.absent(),
                 Value<String> path = const Value.absent(),
                 Value<String> caption = const Value.absent(),
@@ -5407,6 +5532,7 @@ class $$PhotosTableTableManager
                 Value<int> width = const Value.absent(),
                 Value<int> height = const Value.absent(),
                 Value<int> sizeBytes = const Value.absent(),
+                Value<String> createdBy = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -5414,6 +5540,7 @@ class $$PhotosTableTableManager
                 Value<int> rowid = const Value.absent(),
               }) => PhotosCompanion(
                 id: id,
+                spaceId: spaceId,
                 fileId: fileId,
                 path: path,
                 caption: caption,
@@ -5421,6 +5548,7 @@ class $$PhotosTableTableManager
                 width: width,
                 height: height,
                 sizeBytes: sizeBytes,
+                createdBy: createdBy,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -5430,6 +5558,7 @@ class $$PhotosTableTableManager
           createCompanionCallback:
               ({
                 required String id,
+                Value<String> spaceId = const Value.absent(),
                 Value<String> fileId = const Value.absent(),
                 required String path,
                 Value<String> caption = const Value.absent(),
@@ -5437,6 +5566,7 @@ class $$PhotosTableTableManager
                 Value<int> width = const Value.absent(),
                 Value<int> height = const Value.absent(),
                 Value<int> sizeBytes = const Value.absent(),
+                Value<String> createdBy = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -5444,6 +5574,7 @@ class $$PhotosTableTableManager
                 Value<int> rowid = const Value.absent(),
               }) => PhotosCompanion.insert(
                 id: id,
+                spaceId: spaceId,
                 fileId: fileId,
                 path: path,
                 caption: caption,
@@ -5451,6 +5582,7 @@ class $$PhotosTableTableManager
                 width: width,
                 height: height,
                 sizeBytes: sizeBytes,
+                createdBy: createdBy,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,

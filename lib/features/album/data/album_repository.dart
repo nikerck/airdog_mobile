@@ -1,27 +1,33 @@
-/// 相册仓库：选图 → 复制到本地 → 上传拿 fileId → 落本地索引。
+/// 相册仓库：界面唯一的数据入口。
 ///
-/// 上传失败也照样入库（只是没有 fileId），不会因为断网丢照片。
+/// 两段式存储：
+/// - **图片文件** → `/api/files`（上传后拿 fileId）
+/// - **相册记录**（哪张图、什么时候、说明）→ `/api/photos`
+///
+/// 所以相册是真正共享的：换设备、对方账号都能看到同一批照片，
+/// 本地 drift 只是镜像，拉取时按 fileId 把图片下载到 `album/` 目录。
 library;
 import 'package:drift/drift.dart';
 
-import '../../../core/api/file_api.dart';
 import '../../../core/db/app_database.dart';
 import '../../../core/media/photo_store.dart';
+import '../../../core/sync/sync_service.dart';
 
-/// 相册仓库。
-///
-/// 图片文件放服务端（有网络时），索引放本地 drift；
-/// 以后后端补了 /api/photos，把 add/remove 换成接口调用即可，UI 不用动。
 class AlbumRepository {
-  AlbumRepository(this._db, {this.fileApi, PhotoStore? store})
+  AlbumRepository(this._db, {this.sync, PhotoStore? store})
     : _store = store ?? PhotoStore();
 
   final AppDatabase _db;
-  final FileApi? fileApi;
+
+  /// 不为 null 表示在线：增删都走接口，成功后回写本地。
+  /// 为 null 是历史遗留的纯本地模式（登录后才能进主界面，实际走不到）。
+  final SyncService? sync;
   final PhotoStore _store;
 
-  bool get online => fileApi != null;
+  bool get online => sync != null;
 
+  /// 相册列表：只取没删的，按拍摄时间倒序。
+  /// 界面按这个 Stream 自动刷新，不需要手动 setState。
   Stream<List<Photo>> watch() {
     final query = _db.select(_db.photos)
       ..where((t) => t.deletedAt.isNull())
@@ -31,60 +37,46 @@ class AlbumRepository {
     return query.watch();
   }
 
-  /// 选图 → 复制到本地 → 上传拿 fileId → 落库。
-  /// 返回新增数量；上传失败也照样入库，只是没有 fileId。
+  /// 选图并加入相册，返回新增数量。
+  ///
+  /// 在线时每一步都是「上传 → 登记 → 回写本地」，中途失败会抛给页面提示；
+  /// 已选中的文件仍留在本地，不会因为失败丢图。
   Future<int> addPicked() async {
     final paths = await _store.pick();
     if (paths.isEmpty) return 0;
 
-    // 逐张处理：读尺寸 → 上传 → 落库。
-    // 上传失败不抛异常，只是 fileId 为空（照片照样能在本机看到），
-    // 这样断网选图也不会全丢。
     var added = 0;
     for (final path in paths) {
-      final meta = await _store.readMeta(path);
-      var fileId = '';
-
-      if (fileApi != null) {
-        try {
-          fileId = (await fileApi!.upload(path)).id;
-        } catch (_) {
-          // 上传失败：照片仍然留在本地，之后再补传
-        }
+      if (sync != null) {
+        await sync!.createPhoto(localPath: path);
+      } else {
+        final meta = await _store.readMeta(path);
+        final now = DateTime.now();
+        await _db.into(_db.photos).insert(
+              PhotosCompanion.insert(
+                id: 'photo_${now.microsecondsSinceEpoch}_$added',
+                path: path,
+                takenAt: now,
+                width: Value(meta.width),
+                height: Value(meta.height),
+                sizeBytes: Value(meta.sizeBytes),
+                createdAt: now,
+                updatedAt: now,
+              ),
+            );
       }
-
-      final now = DateTime.now();
-      await _db
-          .into(_db.photos)
-          .insert(
-            PhotosCompanion.insert(
-              id: 'photo_${now.microsecondsSinceEpoch}_$added',
-              fileId: Value(fileId),
-              path: path,
-              takenAt: now,
-              width: Value(meta.width),
-              height: Value(meta.height),
-              sizeBytes: Value(meta.sizeBytes),
-              createdAt: now,
-              updatedAt: now,
-            ),
-          );
       added++;
     }
     return added;
   }
 
-  Future<void> updateCaption(Photo photo, String caption) async {
-    await (_db.update(_db.photos)..where((t) => t.id.equals(photo.id))).write(
-      PhotosCompanion(
-        caption: Value(caption),
-        updatedAt: Value(DateTime.now()),
-        rev: Value(photo.rev + 1),
-      ),
-    );
-  }
-
+  /// 删除照片：服务端软删 + 本地软删 + 删本地文件副本。
   Future<void> remove(Photo photo) async {
+    if (sync != null) {
+      await sync!.deletePhoto(photo);
+      return;
+    }
+
     final now = DateTime.now();
     await (_db.update(_db.photos)..where((t) => t.id.equals(photo.id))).write(
       PhotosCompanion(
@@ -93,13 +85,6 @@ class AlbumRepository {
         rev: Value(photo.rev + 1),
       ),
     );
-
-    // 服务端那份也删掉，省空间；删不掉不影响本地
-    if (fileApi != null && photo.fileId.isNotEmpty) {
-      try {
-        await fileApi!.delete(photo.fileId);
-      } catch (_) {}
-    }
     await _store.deleteFiles([photo.path]);
   }
 }

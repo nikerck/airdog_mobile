@@ -44,6 +44,7 @@ class SyncApi {
         periodLogs: read('periodLogs', PeriodLogDto.fromJson),
         wishes: read('wishes', WishDto.fromJson),
         savings: read('savings', SavingDto.fromJson),
+        photos: read('photos', PhotoDto.fromJson),
       );
     } catch (e) {
       throw ApiClient.toApiException(e);
@@ -59,6 +60,7 @@ class SyncPayload {
     required this.periodLogs,
     required this.wishes,
     required this.savings,
+    required this.photos,
     this.nextSince,
   });
 
@@ -69,4 +71,5 @@ class SyncPayload {
   final List<PeriodLogDto> periodLogs;
   final List<WishDto> wishes;
   final List<SavingDto> savings;
+  final List<PhotoDto> photos;
 }

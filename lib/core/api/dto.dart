@@ -202,3 +202,42 @@ class SavingDto {
   final int rev;
   final int? deletedAt;
 }
+
+class PhotoDto {
+  const PhotoDto({
+    required this.id,
+    required this.spaceId,
+    required this.fileId,
+    required this.caption,
+    required this.takenAt,
+    required this.createdBy,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.rev,
+    this.deletedAt,
+  });
+
+  factory PhotoDto.fromJson(Map<String, dynamic> j) => PhotoDto(
+        id: _str(j['id']),
+        spaceId: _str(j['spaceId']),
+        fileId: _str(j['fileId']),
+        caption: _str(j['caption']),
+        takenAt: _intRequired(j['takenAt']),
+        createdBy: _str(j['createdBy']),
+        createdAt: _intRequired(j['createdAt']),
+        updatedAt: _intRequired(j['updatedAt']),
+        rev: _intRequired(j['rev']),
+        deletedAt: _int(j['deletedAt']),
+      );
+
+  final String id;
+  final String spaceId;
+  final String fileId;
+  final String caption;
+  final int takenAt;
+  final String createdBy;
+  final int createdAt;
+  final int updatedAt;
+  final int rev;
+  final int? deletedAt;
+}

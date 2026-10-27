@@ -14,6 +14,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../api/dto.dart';
 import '../api/file_api.dart';
 import '../api/period_api.dart';
+import '../api/photo_api.dart';
 import '../api/sync_api.dart';
 import '../api/todo_api.dart';
 import '../api/wish_api.dart';
@@ -63,6 +64,7 @@ class SyncService {
   late final FileApi _fileApi = FileApi(dio);
   late final SyncApi _syncApi = SyncApi(dio);
   late final WishApi _wishApi = WishApi(dio);
+  late final PhotoApi _photoApi = PhotoApi(dio);
   late final SavingApi _savingApi = SavingApi(dio);
 
   static const _kSince = 'sync.since';
@@ -114,6 +116,10 @@ class SyncService {
       }
       for (final dto in payload.savings) {
         await upsertSaving(dto);
+        pulled++;
+      }
+      for (final dto in payload.photos) {
+        await upsertPhoto(dto);
         pulled++;
       }
 
@@ -333,6 +339,52 @@ class SyncService {
     );
   }
 
+  // ---------------------------------------------------------------- 相册（写）
+
+  /// 新增照片：先把本地文件传上去拿 fileId，再登记到 /api/photos。
+  ///
+  /// 和待办的图片不同，相册的照片有独立的服务端记录，
+  /// 所以对方/别的设备能看到同一批照片。
+  Future<void> createPhoto({
+    required String localPath,
+    String caption = '',
+    String spaceId = Spaces.shared,
+  }) async {
+    final ids = await _uploadImages([localPath]);
+    if (ids.isEmpty) return;
+
+    final dto = await _photoApi.create(
+      spaceId: spaceId,
+      fileId: ids.first,
+      caption: caption,
+      takenAt: DateTime.now().millisecondsSinceEpoch,
+    );
+    await upsertPhoto(dto, localPath: localPath);
+  }
+
+  Future<void> deletePhoto(Photo photo) async {
+    try {
+      await _photoApi.delete(photo.id);
+    } on ApiException catch (e) {
+      // 别的设备已经删过了，本地照样删
+      if (!isAlreadyGone(e)) rethrow;
+    }
+    final now = DateTime.now();
+    await (db.update(db.photos)..where((t) => t.id.equals(photo.id))).write(
+      PhotosCompanion(
+        deletedAt: Value(now),
+        updatedAt: Value(now),
+        rev: Value(photo.rev + 1),
+      ),
+    );
+    if (photo.path.isNotEmpty) {
+      try {
+        final file = File(photo.path);
+        if (await file.exists()) await file.delete();
+      } catch (_) {}
+    }
+  }
+
   // ---------------------------------------------------------------- 映射
 
   /// 把服务端的一条待办写进本地。
@@ -416,6 +468,58 @@ class SyncService {
         );
   }
 
+  /// 把服务端的一张照片写进本地。
+  ///
+  /// [localPath] 是刚添加时已知的本地路径；从服务端拉取时不传，
+  /// 会按 fileId 去缓存里找，找不到就下载到 `album/` 目录。
+  Future<void> upsertPhoto(PhotoDto dto, {String? localPath}) async {
+    var path = localPath ?? '';
+    if (path.isEmpty) {
+      final cached = await (db.select(db.fileCache)
+            ..where((t) => t.fileId.equals(dto.fileId)))
+          .getSingleOrNull();
+      if (cached != null && await File(cached.localPath).exists()) {
+        path = cached.localPath;
+      } else {
+        final resolved = await resolveImages([dto.fileId], subdir: 'album');
+        path = resolved.isEmpty ? '' : resolved.first;
+      }
+    }
+
+    // 宽高/体积是本地信息，服务端没有；已存在的行就别覆盖成 0
+    final existing = await (db.select(db.photos)
+          ..where((t) => t.id.equals(dto.id)))
+        .getSingleOrNull();
+    var width = existing?.width ?? 0;
+    var height = existing?.height ?? 0;
+    var size = existing?.sizeBytes ?? 0;
+    if ((width == 0 || size == 0) && path.isNotEmpty) {
+      try {
+        final file = File(path);
+        size = await file.length();
+      } catch (_) {}
+    }
+
+    await db.into(db.photos).insertOnConflictUpdate(
+          PhotosCompanion.insert(
+            id: dto.id,
+            spaceId: Value(dto.spaceId),
+            fileId: Value(dto.fileId),
+            path: path,
+            caption: Value(dto.caption),
+            takenAt: _dt(dto.takenAt) ?? DateTime.now(),
+            width: Value(width),
+            height: Value(height),
+            sizeBytes: Value(size),
+            createdBy: Value(dto.createdBy),
+            createdAt: _dt(dto.createdAt) ?? DateTime.now(),
+            updatedAt: _dt(dto.updatedAt) ?? DateTime.now(),
+            deletedAt: Value(_dt(dto.deletedAt)),
+            rev: Value(dto.rev),
+          ),
+        );
+  }
+
   DateTime? _dt(int? ms) =>
       ms == null ? null : DateTime.fromMillisecondsSinceEpoch(ms);
 
@@ -452,7 +556,10 @@ class SyncService {
   /// 顺序：先查 file_cache → 文件还在就直接用；否则按 id 下载到
   /// `<App目录>/todo_images/srv_<fileId>` 并写回缓存。
   /// 下载失败只是少一张图，绝不能因此丢掉整条待办，所以这里吞掉异常。
-  Future<List<String>> resolveImages(List<String> fileIds) async {
+  Future<List<String>> resolveImages(
+    List<String> fileIds, {
+    String subdir = 'todo_images',
+  }) async {
     final paths = <String>[];
     for (final id in fileIds) {
       final cached = await (db.select(db.fileCache)
@@ -464,7 +571,7 @@ class SyncService {
       }
       try {
         final dir = await getApplicationDocumentsDirectory();
-        final savePath = p.join(dir.path, 'todo_images', 'srv_$id');
+        final savePath = p.join(dir.path, subdir, 'srv_$id');
         await _fileApi.download(id, savePath);
         await db.into(db.fileCache).insertOnConflictUpdate(
               FileCacheCompanion.insert(

@@ -13,7 +13,9 @@ Photo photo({
 }) =>
     Photo(
       id: id,
+      spaceId: 'sp_shared',
       fileId: 'file_$id',
+      createdBy: 'u_me',
       path: '/tmp/$id.jpg',
       caption: caption,
       takenAt: takenAt,

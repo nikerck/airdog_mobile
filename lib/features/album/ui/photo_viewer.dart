@@ -44,13 +44,6 @@ class _PhotoViewerState extends ConsumerState<PhotoViewer> {
     super.dispose();
   }
 
-  Future<void> _saveCaption() async {
-    final photo = _current;
-    final text = _caption.text.trim();
-    if (text == photo.caption) return;
-    await ref.read(albumRepositoryProvider).updateCaption(photo, text);
-  }
-
   Future<void> _delete() async {
     final photo = _current;
     final ok = await showDialog<bool>(
@@ -92,7 +85,6 @@ class _PhotoViewerState extends ConsumerState<PhotoViewer> {
               controller: _controller,
               itemCount: widget.photos.length,
               onPageChanged: (i) {
-                _saveCaption();
                 setState(() {
                   _index = i;
                   _caption.text = widget.photos[i].caption;
@@ -190,28 +182,13 @@ class _PhotoViewerState extends ConsumerState<PhotoViewer> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TextField(
-              controller: _caption,
-              style: const TextStyle(color: Colors.white, fontSize: 14),
-              cursorColor: Colors.white,
-              decoration: const InputDecoration(
-                isDense: true,
-                filled: false,
-                fillColor: Colors.transparent,
-                hintText: '写点什么…',
-                hintStyle: TextStyle(color: Colors.white38, fontSize: 14),
-                border: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white24),
-                ),
-                enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white24),
-                ),
-                focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white70),
-                ),
+            // 说明目前只读：后端还没提供 PATCH /api/photos/{id}，
+            // 本地改了会在下次同步时被服务端的空值覆盖，索性先不给编辑。
+            if (_current.caption.isNotEmpty)
+              Text(
+                _current.caption,
+                style: const TextStyle(color: Colors.white, fontSize: 14),
               ),
-              onSubmitted: (_) => _saveCaption(),
-            ),
             const SizedBox(height: 10),
             Row(
               children: [

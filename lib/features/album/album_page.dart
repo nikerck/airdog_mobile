@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_theme.dart';
+import '../../../core/api/api_providers.dart';
 import '../../../core/db/app_database.dart';
 import '../../shared/widgets/run_guarded.dart';
 import 'domain/photo_group.dart';
@@ -24,6 +25,7 @@ class AlbumPage extends ConsumerWidget {
     final muted = AppTheme.muted(context);
     final photos = ref.watch(photosProvider).valueOrNull ?? const <Photo>[];
     final groups = groupByMonth(photos);
+    final partner = ref.watch(partnerProvider);
 
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
@@ -56,8 +58,11 @@ class AlbumPage extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 4),
+            // 相册记录已经服务端化，和待办一样是共享的
             Text(
-              '照片存在你的服务器，索引在本机',
+              partner == null
+                  ? '照片存在你的服务器，只有你能看'
+                  : '照片存在你的服务器，和 ${partner.name} 共享',
               style: TextStyle(fontSize: 12, color: muted),
             ),
             const SizedBox(height: 18),

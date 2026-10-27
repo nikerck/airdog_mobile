@@ -24,7 +24,7 @@ class AppDatabase extends _$AppDatabase {
       : super(executor ?? driftDatabase(name: 'xiaowo'));
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -54,6 +54,11 @@ class AppDatabase extends _$AppDatabase {
           // v5 → v6：相册
           if (from < 6) {
             await m.createTable(photos);
+          }
+          // v6 → v7：相册接服务端（新增 spaceId / createdBy）
+          if (from < 7) {
+            await m.addColumn(photos, photos.spaceId);
+            await m.addColumn(photos, photos.createdBy);
           }
         },
         beforeOpen: (details) async {

@@ -109,23 +109,31 @@ class WishSavings extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-/// 相册照片。
+/// 相册照片（和 /api/photos 一一对应）。
 ///
-/// 图片本身存在服务端（POST /api/files），这里只存索引 + 本地副本路径。
-/// 服务端暂时没有相册表，所以索引是单机的；换设备后需要 /api/photos 才能恢复（见 docs/api）。
+/// 图片文件本身走 /api/files，这里存的是「哪张图属于相册 + 说明 + 拍摄时间」。
+/// 服务端已经有相册表了，所以这张表是**共享数据的本地镜像**：
+/// 换设备、对方账号都能看到同一批照片。
+///
+/// 只多出一个本地字段 [path]：照片的本地副本路径，用来渲染缩略图；
+/// 换设备时它为空，拉取后按 fileId 下载补上（见 SyncService.resolveImages）。
 class Photos extends Table {
   TextColumn get id => text()();
+
+  /// 属于哪个空间（目前固定共享空间）
+  TextColumn get spaceId => text().withDefault(const Constant('sp_shared'))();
 
   /// 服务端文件 id；离线添加时为空
   TextColumn get fileId => text().withDefault(const Constant(''))();
 
-  /// 本地副本，渲染用
+  /// 本地副本，渲染用（换设备后由下载补上）
   TextColumn get path => text()();
   TextColumn get caption => text().withDefault(const Constant(''))();
   DateTimeColumn get takenAt => dateTime()();
   IntColumn get width => integer().withDefault(const Constant(0))();
   IntColumn get height => integer().withDefault(const Constant(0))();
   IntColumn get sizeBytes => integer().withDefault(const Constant(0))();
+  TextColumn get createdBy => text().withDefault(const Constant('u_me'))();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
   DateTimeColumn get deletedAt => dateTime().nullable()();
