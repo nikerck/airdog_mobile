@@ -66,7 +66,15 @@ final syncPollerProvider = Provider<SyncPoller>((ref) {
   final poller = SyncPoller(
     pull: () async {
       if (sync == null) return 0;
-      return sync.pullAll();
+      final pulled = await sync.pullAll();
+
+      // 启动时后端没起来的话，成员列表会停在空状态（首页显示「自己用」）。
+      // 轮询既然连通了，就顺手补一次，不用等用户重启 App。
+      final spaces = ref.read(spacesProvider).valueOrNull;
+      if (spaces == null || spaces.isEmpty) {
+        ref.invalidate(spacesProvider);
+      }
+      return pulled;
     },
   );
   ref.onDispose(poller.stop);
